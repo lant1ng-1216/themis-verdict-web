@@ -327,12 +327,6 @@ The Verdict Relation Graph is a live, growing map of how verdicts connect over t
 - **LLM Client**: openai-compatible SDK
 - **Persistence**: Local JSON (weights.json, verdicts/)
 
-### On-Chain (planned)
-- **Network**: BNB Chain + Mantle
-- **Contract Language**: Solidity 0.8.x
-- **Client**: wagmi + viem
-- **Wallet**: RainbowKit
-
 ---
 
 ## Repository Structure
