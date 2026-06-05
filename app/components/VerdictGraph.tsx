@@ -211,7 +211,7 @@ export default function VerdictGraph() {
 
   // D3
   useEffect(() => {
-    if (!svgRef.current || nodes.length === 0) return;
+    if (!svgRef.current || nodes.length === 0) return undefined;
     const w = svgRef.current.clientWidth || 900;
     const h = svgRef.current.clientHeight || 600;
     d3.select(svgRef.current).selectAll("*").remove();
@@ -420,7 +420,7 @@ export default function VerdictGraph() {
     simulationRef.current = sim;
     nodesRef.current = nodes;
     svg.on("click", () => setSelectedNode(null));
-    return () => sim.stop();
+    return () => { sim.stop(); };
   }, [nodes, edges]);
 
   const resetLayout = () => {
