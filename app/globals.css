@@ -1,26 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f0f4fb;
+  --bg-card: #ffffff;
+  --bg-subtle: #f7f9fd;
+  --border: #e2e8f4;
+  --border-strong: #c8d4ec;
+  --blue: #0047cc;
+  --blue-light: #e8f0ff;
+  --blue-mid: #3366ee;
+  --red: #e8193c;
+  --red-light: #fff0f3;
+  --red-mid: #ff3355;
+  --green: #00954a;
+  --green-light: #edfaf4;
+  --yellow: #d4800a;
+  --yellow-light: #fff8e6;
+  --text: #1a2440;
+  --text-2: #4a5880;
+  --text-3: #8899bb;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Inter', sans-serif;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(10,30,80,0.08), 0 4px 16px rgba(10,30,80,0.04);
+  --shadow-lg: 0 2px 8px rgba(10,30,80,0.1), 0 8px 32px rgba(10,30,80,0.06);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* Subtle grid bg */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Glow top */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 400px;
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,71,204,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.font-mono { font-family: var(--font-mono); }
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes progressFill {
+  from { width: 0%; }
+  to { width: var(--w); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.9); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.anim-up { animation: fadeUp 0.4s ease forwards; }
+.anim-in { animation: fadeIn 0.3s ease forwards; }
+.anim-left { animation: slideInLeft 0.35s ease forwards; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::selection { background: var(--blue-light); color: var(--blue); }
