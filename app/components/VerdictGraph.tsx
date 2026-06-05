@@ -527,7 +527,7 @@ export default function VerdictGraph() {
           ].map(({ color, label, desc, dashed }) => (
             <div key={label} style={{ marginBottom: 10 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-                <div style={{ width: 24, height: 2, background: color, borderRadius: 1, flexShrink: 0, borderTop: dashed ? `2px dashed ${color}` : "none", background: dashed ? "none" : color }} />
+                <div style={{ width: 24, height: 2, background: dashed ? "none" : color, borderRadius: 1, flexShrink: 0, borderTop: dashed ? `2px dashed ${color}` : "none" }} />
                 <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, fontWeight: 700, color }}>{label}</span>
               </div>
               <p style={{ fontSize: 10, color: "rgba(10,26,58,0.4)", margin: "0 0 0 32px", lineHeight: 1.5 }}>{desc}</p>
