@@ -372,6 +372,14 @@ Themis is designed as a **verdict infrastructure** business, not a SaaS tool. Th
 
 ### Revenue Layers
 
+**Layer 1 — Skill Licensing & Tooling**
+The Themis Strategy Skill is openly documented — but the core engine has tiered value:
+- The public Skill file teaches any agent the methodology (open, free)
+- The hosted web interface provides instant access without local setup (freemium)
+- Advanced tiers unlock higher refresh rates, custom asset coverage, and priority inference
+- White-label licensing: other platforms can embed the Themis verdict engine under their own brand
+- The terminal system serves as a professional-grade tooling layer for power users and quant teams
+
 **Layer 2 — Data Licensing**
 The public feed creates a unique dataset: structured market verdicts with verified accuracy records. This dataset has value for:
 - Quantitative research firms
