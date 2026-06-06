@@ -230,7 +230,7 @@ export default function VerdictTree({ symbols, lang = "en" }: Props) {
       .on("mouseleave", () => setTooltip(null));
 
     // Pulse ring for hour roots
-    nodeSel.filter(d => d.isRoot || d.isDayRoot)
+    nodeSel.filter(d => !!d.isRoot || !!d.isDayRoot)
       .append("circle")
       .attr("r", d => d.r + 7)
       .attr("fill", "none")
@@ -254,7 +254,7 @@ export default function VerdictTree({ symbols, lang = "en" }: Props) {
       .attr("clip-path", d => `url(#vtc5-${nodeIndexMap.get(d.id)})`);
 
     // Day root T label
-    nodeSel.filter(d => d.isDayRoot)
+    nodeSel.filter(d => !!d.isDayRoot)
       .append("text")
       .attr("text-anchor", "middle").attr("dominant-baseline", "central")
       .attr("font-family", "JetBrains Mono, monospace")
