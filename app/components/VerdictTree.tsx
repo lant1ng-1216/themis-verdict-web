@@ -151,7 +151,7 @@ export default function VerdictTree({ symbols, lang = "en" }: Props) {
     function runViz(nodes: NodeDatum[], links: LinkDatum[], W: number, H: number) {
     const nodeIndexMap = new Map(nodes.map((n, i) => [n.id, i]));
 
-    const svg = d3.select(svgRef.current).attr("width", W).attr("height", H);
+    const svg = d3.select(svgRef.current as SVGSVGElement).attr("width", W).attr("height", H);
     svg.selectAll("*").remove();
 
     const defs = svg.append("defs");
