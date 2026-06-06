@@ -52,8 +52,7 @@ const CONCLUSION_COLORS = {
   neutral: "#d4800a",
 };
 
-function generateMockData(): { nodes: VerdictNode[]; edges: VerdictEdge[] } {
-  const symbols = ["BTC", "ETH", "BNB", "SOL"];
+function generateMockData(symbols: string[] = ["BTC","ETH","BNB","SOL"]): { nodes: VerdictNode[]; edges: VerdictEdge[] } {
   const conclusions: Array<"bearish" | "bullish" | "neutral"> = ["bearish", "bullish", "neutral"];
   const regimes = [
     { label: "PANIC SELLOFF", color: "red" },
