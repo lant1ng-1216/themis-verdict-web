@@ -279,7 +279,7 @@ export default function VerdictTree({ symbols, lang = "en" }: Props) {
         .distance(d => (d as LinkDatum).isHourLink ? 400 : 300 + (1 - ((d as LinkDatum).correlation || 0.5)) * 120)
         .strength(d => (d as LinkDatum).isHourLink ? 0.6 : 0.5)
       )
-      .force("charge", d3.forceManyBody().strength(d => d.isDayRoot ? -3000 : d.isRoot ? -2400 : -1200))
+      .force("charge", d3.forceManyBody<NodeDatum>().strength(d => d.isDayRoot ? -3000 : d.isRoot ? -2400 : -1200))
       .force("collision", d3.forceCollide<NodeDatum>().radius(d => d.r + 110))
       .force("y", d3.forceY<NodeDatum>()
         .y(d => d.isDayRoot ? 80 : d.isRoot ? 380 : 820)
