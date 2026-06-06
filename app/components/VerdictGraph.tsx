@@ -119,7 +119,7 @@ function generateMockData(): { nodes: VerdictNode[]; edges: VerdictEdge[] } {
   return { nodes, edges };
 }
 
-export default function VerdictGraph() {
+export default function VerdictGraph({ symbols: symbolsProp, lang: langProp, setLang: setLangProp }: { symbols?: string[]; lang?: string; setLang?: (l: string) => void }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [nodes, setNodes] = useState<VerdictNode[]>([]);
   const [edges, setEdges] = useState<VerdictEdge[]>([]);
@@ -130,7 +130,10 @@ export default function VerdictGraph() {
   const simulationRef = useRef<d3.Simulation<VerdictNode, VerdictEdge> | null>(null);
   const nodesRef = useRef<VerdictNode[]>([]);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [lang, setLang] = useState("en");
+
+  const [langInternal, setLangInternal] = useState("en");
+  const lang = langProp ?? langInternal;
+  const setLang = setLangProp ?? setLangInternal;
 
   useEffect(() => {
     const stored = localStorage.getItem("themis_lang") || "en";
@@ -140,7 +143,7 @@ export default function VerdictGraph() {
   const t = useCallback((en: string, zh: string) => lang === "zh" ? zh : en, [lang]);
 
   useEffect(() => {
-    const { nodes: n, edges: e } = generateMockData();
+    const { nodes: n, edges: e } = generateMockData(symbolsProp && symbolsProp.length >= 2 ? symbolsProp : ["BTC","ETH","BNB","SOL"]);
     setNodes(n);
     setEdges(e);
     setLastUpdate(new Date().toLocaleTimeString());
@@ -148,7 +151,7 @@ export default function VerdictGraph() {
 
   useEffect(() => {
     if (!isLive) return;
-    const symbols = ["BTC", "ETH", "BNB", "SOL"];
+    const symbols = symbolsProp && symbolsProp.length >= 2 ? symbolsProp : ["BTC", "ETH", "BNB", "SOL"];
     const conclusions: Array<"bearish" | "bullish" | "neutral"> = ["bearish", "bullish", "neutral"];
     const regimes = [
       { label: "PANIC SELLOFF", color: "red" },
@@ -204,9 +207,40 @@ export default function VerdictGraph() {
       const dx = (e.clientX - cx) / cx;
       const dy = (e.clientY - cy) / cy;
       setTilt({ x: dy * 6, y: -dx * 6 });
+
+      // Right-drag 3D rotation
+      if (rightDragRef.current.dragging) {
+        const deltaX = e.clientX - rightDragRef.current.lastX;
+        const deltaY = e.clientY - rightDragRef.current.lastY;
+        rightDragRef.current.lastX = e.clientX;
+        rightDragRef.current.lastY = e.clientY;
+        setRotation(prev => ({
+          x: Math.max(-45, Math.min(45, prev.x - deltaY * 0.4)),
+          y: Math.max(-60, Math.min(60, prev.y + deltaX * 0.4)),
+        }));
+      }
     };
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button === 2 || (e.button === 0 && e.shiftKey)) {
+        rightDragRef.current = { dragging: true, lastX: e.clientX, lastY: e.clientY };
+        if (e.shiftKey) e.preventDefault();
+      }
+    };
+    const handleMouseUp = (e: MouseEvent) => {
+      if (e.button === 2 || e.button === 0) rightDragRef.current.dragging = false;
+    };
+    const handleContextMenu = (e: MouseEvent) => e.preventDefault();
+
     window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("contextmenu", handleContextMenu);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("contextmenu", handleContextMenu);
+    };
   }, []);
 
   // D3
