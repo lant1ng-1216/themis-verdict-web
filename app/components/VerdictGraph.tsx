@@ -206,39 +206,6 @@ export default function VerdictGraph({ symbols: symbolsProp, lang: langProp, set
       const dx = (e.clientX - cx) / cx;
       const dy = (e.clientY - cy) / cy;
       setTilt({ x: dy * 6, y: -dx * 6 });
-
-      // Right-drag 3D rotation
-      if (rightDragRef.current.dragging) {
-        const deltaX = e.clientX - rightDragRef.current.lastX;
-        const deltaY = e.clientY - rightDragRef.current.lastY;
-        rightDragRef.current.lastX = e.clientX;
-        rightDragRef.current.lastY = e.clientY;
-        setRotation(prev => ({
-          x: Math.max(-45, Math.min(45, prev.x - deltaY * 0.4)),
-          y: Math.max(-60, Math.min(60, prev.y + deltaX * 0.4)),
-        }));
-      }
-    };
-    const handleMouseDown = (e: MouseEvent) => {
-      if (e.button === 2 || (e.button === 0 && e.shiftKey)) {
-        rightDragRef.current = { dragging: true, lastX: e.clientX, lastY: e.clientY };
-        if (e.shiftKey) e.preventDefault();
-      }
-    };
-    const handleMouseUp = (e: MouseEvent) => {
-      if (e.button === 2 || e.button === 0) rightDragRef.current.dragging = false;
-    };
-    const handleContextMenu = (e: MouseEvent) => e.preventDefault();
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mousedown", handleMouseDown);
-    window.addEventListener("mouseup", handleMouseUp);
-    window.addEventListener("contextmenu", handleContextMenu);
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mousedown", handleMouseDown);
-      window.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("contextmenu", handleContextMenu);
     };
   }, []);
 
