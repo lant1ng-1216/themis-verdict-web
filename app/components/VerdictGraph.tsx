@@ -371,17 +371,21 @@ export default function VerdictGraph({ symbols: symbolsProp, lang: langProp, set
       .attr("fill", "rgba(255,255,255,0.5)")
       .attr("opacity", 0.7);
 
-    // Token image
-    // Token image via foreignObject (HTML img for better compatibility)
-    node.append("foreignObject")
-      .attr("x", -12).attr("y", -12)
-      .attr("width", 24).attr("height", 24)
-      .attr("clip-path", d => `url(#clip-${d.id})`)
-      .append("xhtml:img")
-      .attr("src", d => `https://s2.coinmarketcap.com/static/img/coins/32x32/${CMC_IDS[d.symbol]}.png`)
-      .attr("width", 24).attr("height", 24)
-      .style("border-radius", "50%")
-      .style("display", "block");
+    // Symbol color circle + text (no external image dependency)
+    node.append("circle")
+      .attr("r", 12)
+      .attr("fill", d => `${SYMBOL_COLORS[d.symbol] || "#0047cc"}cc`)
+      .attr("stroke", d => SYMBOL_COLORS[d.symbol] || "#0047cc")
+      .attr("stroke-width", 1.5);
+
+    node.append("text")
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "central")
+      .attr("font-family", "JetBrains Mono, monospace")
+      .attr("font-size", d => d.symbol.length <= 3 ? "8px" : "6px")
+      .attr("font-weight", "700")
+      .attr("fill", "white")
+      .text(d => d.symbol.slice(0, 4));
 
 
     // Conclusion badge
