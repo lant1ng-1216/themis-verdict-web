@@ -505,7 +505,7 @@ npm run dev
 
 ```
 CMC_API_KEY=          # CoinMarketCap API key (free Basic plan)
-DEEPSEEK_API_KEY=     # Any OpenAI-compatible LLM key
+LLM_API_KEY=     # Any OpenAI-compatible LLM key
 FINNHUB_API_KEY=      # Finnhub API key (free plan)
 ```
 
