@@ -85,15 +85,7 @@ export default function Home() {
       {/* Hero content */}
       <div style={{ position: "relative", zIndex: 3, maxWidth: 580, width: "100%", textAlign: "center", padding: "40px 24px", marginTop: 56 }}>
 
-        {/* Eyebrow */}
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(0,71,204,0.1)", border: "1px solid rgba(0,71,204,0.25)", borderRadius: 20, padding: "5px 14px", marginBottom: 28, backdropFilter: "blur(8px)" }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0047cc", animation: "pulse 2s ease infinite" }} />
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#0047cc", letterSpacing: "0.15em", fontWeight: 600 }}>
-            {t("VERDICT PROTOCOL", "裁决协议")}
-          </span>
-        </div>
-
-        {/* Title */}
+                {/* Title */}
         <h1 style={{ fontFamily: "var(--font-mono)", fontSize: "clamp(56px,10vw,88px)", fontWeight: 700, color: "#0a1a3a", letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 6, textShadow: "0 2px 20px rgba(255,255,255,0.8)" }}>
           THEMIS
         </h1>
