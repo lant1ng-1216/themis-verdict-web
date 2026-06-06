@@ -50,7 +50,18 @@ interface TooltipInfo {
   lines: string[];
 }
 
-function buildData(symbols: string[]): { nodes: NodeDatum[]; links: LinkDatum[] } {
+async function fetchRealPrices(symbols: string[]): Promise<Record<string, { change24h: number; change1h: number; price: number }> | null> {
+  try {
+    const res = await fetch(`/api/prices?symbols=${symbols.join(",")}`);
+    const json = await res.json();
+    if (!json.data) return null;
+    return json.data;
+  } catch {
+    return null;
+  }
+}
+
+function buildData(symbols: string[], realPrices?: Record<string, { change24h: number; change1h: number; price: number }> | null): { nodes: NodeDatum[]; links: LinkDatum[] } {
   const currentHour = new Date().getHours();
   const W = typeof window !== "undefined" ? window.innerWidth : 1400;
   const H = typeof window !== "undefined" ? window.innerHeight : 800;
@@ -62,14 +73,23 @@ function buildData(symbols: string[]): { nodes: NodeDatum[]; links: LinkDatum[] 
   const hourCount = currentHour + 1;
   for (let h = 0; h <= currentHour; h++) {
     const changes: Record<string, number> = {};
-    symbols.forEach(s => { changes[s] = (Math.random() - 0.48) * 10; });
+    const isCurrentHour = h === currentHour;
+    symbols.forEach(s => {
+      if (isCurrentHour && realPrices?.[s]) {
+        changes[s] = realPrices[s].change24h;
+      } else {
+        changes[s] = (Math.random() - 0.48) * 10;
+      }
+    });
     const dominant = symbols.reduce((a, b) => Math.abs(changes[a]) > Math.abs(changes[b]) ? a : b);
     const hourId = `h${h}`;
     const hx = (W * 0.05) + (h / Math.max(hourCount - 1, 1)) * (W * 3.2);
 
+    const isCurrentHourNode = h === currentHour;
     nodes.push({
       id: hourId, symbol: dominant, hour: h, isRoot: true,
-      change24h: changes[dominant], change1h: (Math.random() - 0.48) * 2,
+      change24h: changes[dominant],
+      change1h: isCurrentHourNode && realPrices?.[dominant] ? realPrices[dominant].change1h : (Math.random() - 0.48) * 2,
       r: 28, x: hx, y: 380,
     });
     links.push({ source: "dayroot", target: hourId, isHourLink: true, direction: "same", correlation: 1 });
@@ -118,7 +138,17 @@ export default function VerdictTree({ symbols, lang = "en" }: Props) {
     const W = containerRef.current.clientWidth;
     const H = containerRef.current.clientHeight;
 
-    const { nodes, links } = buildData(symbols);
+    let cancelled = false;
+
+    async function init() {
+      const realPrices = await fetchRealPrices(symbols);
+      if (cancelled) return;
+      if (cancelled) return;
+      const { nodes, links } = buildData(symbols, realPrices);
+      runViz(nodes, links, W, H);
+    }
+
+    function runViz(nodes: NodeDatum[], links: LinkDatum[], W: number, H: number) {
     const nodeIndexMap = new Map(nodes.map((n, i) => [n.id, i]));
 
     const svg = d3.select(svgRef.current).attr("width", W).attr("height", H);
@@ -299,7 +329,10 @@ export default function VerdictTree({ symbols, lang = "en" }: Props) {
       });
 
     simRef.current = sim;
-    return () => { sim.stop(); };
+    } // end runViz
+
+    init();
+    return () => { cancelled = true; if (simRef.current) simRef.current.stop(); };
   }, [symbols, t]);
 
   return (

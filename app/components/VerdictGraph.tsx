@@ -150,53 +150,64 @@ export default function VerdictGraph({ symbols: symbolsProp, lang: langProp, set
 
   useEffect(() => {
     if (!isLive) return;
-    const symbols = symbolsProp && symbolsProp.length >= 2 ? symbolsProp : ["BTC", "ETH", "BNB", "SOL"];
-    const conclusions: Array<"bearish" | "bullish" | "neutral"> = ["bearish", "bullish", "neutral"];
-    const regimes = [
-      { label: "PANIC SELLOFF", color: "red" },
-      { label: "BEAR TREND", color: "red" },
-      { label: "ACCUMULATION", color: "yellow" },
-      { label: "BULL TREND", color: "green" },
-    ];
-    const interval = setInterval(() => {
-      const sym = symbols[Math.floor(Math.random() * symbols.length)];
-      const conclusion = conclusions[Math.floor(Math.random() * conclusions.length)];
-      const regime = regimes[Math.floor(Math.random() * regimes.length)];
-      const newNode: VerdictNode = {
-        id: `node_live_${Date.now()}`,
-        symbol: sym,
-        conclusion,
-        confidence: Math.round(40 + Math.random() * 50),
-        regime: regime.label,
-        regime_color: regime.color,
-        intensity: Math.round(20 + Math.random() * 60),
-        timestamp: new Date().toISOString(),
-        depth: Math.random(),
-      };
-      setNodes(prev => {
-        const newEdges: VerdictEdge[] = [];
-        prev.slice(-6).forEach((ex, i) => {
-          if (Math.random() > 0.5) return;
-          const sameDir = ex.conclusion === newNode.conclusion;
-          const sameSym = ex.symbol === newNode.symbol;
-          newEdges.push({
-            id: `edge_live_${Date.now()}_${i}`,
-            source: ex.id,
-            target: newNode.id,
-            relation: sameSym ? (sameDir ? "同向" : "反向") : (sameDir ? "联动" : "diverge"),
-            strength: Math.round((ex.confidence + newNode.confidence) / 200 * 100) / 100,
-            label: sameSym ? (sameDir ? `${newNode.symbol} sustained` : `${newNode.symbol} reversal`) : (sameDir ? `${ex.symbol}/${newNode.symbol} co-move` : `${ex.symbol}/${newNode.symbol} diverge`),
-            labelZh: sameSym ? (sameDir ? `${newNode.symbol}持续信号` : `${newNode.symbol}信号反转`) : (sameDir ? `${ex.symbol}/${newNode.symbol}联动` : `${ex.symbol}/${newNode.symbol}分歧`),
-            color: sameSym ? (sameDir ? "#00954a" : "#e8193c") : (sameDir ? "#0047cc" : "#9945ff"),
+    const activeSymbols = symbolsProp && symbolsProp.length >= 2 ? symbolsProp : ["BTC","ETH","BNB","SOL"];
+
+    async function fetchAndAddNodes() {
+      try {
+        const res = await fetch(`/api/prices?symbols=${activeSymbols.join(",")}`);
+        const json = await res.json();
+        if (!json.data) return;
+        const regimes = [
+          { label: "PANIC SELLOFF", color: "red" },
+          { label: "BEAR TREND", color: "red" },
+          { label: "ACCUMULATION", color: "yellow" },
+          { label: "RECOVERY", color: "green" },
+          { label: "BULL TREND", color: "green" },
+        ];
+        activeSymbols.forEach(sym => {
+          const p = json.data[sym];
+          if (!p) return;
+          const c24 = p.change24h;
+          const conclusion: "bearish" | "bullish" | "neutral" = c24 < -3 ? "bearish" : c24 > 3 ? "bullish" : "neutral";
+          const confidence = Math.min(95, Math.round(50 + Math.abs(c24) * 3));
+          const intensity = Math.min(100, Math.round(50 + Math.abs(c24) * 4));
+          const regime = c24 < -5 ? regimes[0] : c24 < -2 ? regimes[1] : c24 < 2 ? regimes[2] : c24 < 5 ? regimes[3] : regimes[4];
+          const newNode: VerdictNode = {
+            id: `node_real_${sym}_${Date.now()}`,
+            symbol: sym, conclusion, confidence,
+            regime: regime.label, regime_color: regime.color,
+            intensity, timestamp: new Date().toISOString(), depth: Math.random(),
+          };
+          setNodes(prev => {
+            const newEdges: VerdictEdge[] = [];
+            prev.slice(-8).forEach((ex, i) => {
+              if (Math.random() > 0.5) return;
+              const sameDir = ex.conclusion === newNode.conclusion;
+              const sameSym = ex.symbol === newNode.symbol;
+              newEdges.push({
+                id: `edge_real_${Date.now()}_${i}`,
+                source: ex.id, target: newNode.id,
+                relation: sameSym ? (sameDir ? "同向" : "反向") : (sameDir ? "联动" : "diverge"),
+                strength: Math.round((ex.confidence + newNode.confidence) / 200 * 100) / 100,
+                label: sameSym ? (sameDir ? `${newNode.symbol} sustained` : `${newNode.symbol} reversal`) : (sameDir ? `${ex.symbol}/${newNode.symbol} co-move` : `${ex.symbol}/${newNode.symbol} diverge`),
+                labelZh: sameSym ? (sameDir ? `${newNode.symbol}持续信号` : `${newNode.symbol}信号反转`) : (sameDir ? `${ex.symbol}/${newNode.symbol}联动` : `${ex.symbol}/${newNode.symbol}分歧`),
+                color: sameSym ? (sameDir ? "#00954a" : "#e8193c") : (sameDir ? "#0047cc" : "#9945ff"),
+              });
+            });
+            setEdges(e => [...e, ...newEdges]);
+            return [...prev, newNode];
           });
         });
-        setEdges(e => [...e, ...newEdges]);
-        return [...prev, newNode];
-      });
-      setLastUpdate(new Date().toLocaleTimeString());
-    }, 8000);
+        setLastUpdate(new Date().toLocaleTimeString());
+      } catch (e) {
+        console.error("fetchAndAddNodes failed:", e);
+      }
+    }
+
+    fetchAndAddNodes();
+    const interval = setInterval(fetchAndAddNodes, 4 * 60 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [isLive]);
+  }, [isLive, symbolsProp]);
 
   // Mouse tilt for 2.5D effect
   useEffect(() => {
@@ -361,12 +372,17 @@ export default function VerdictGraph({ symbols: symbolsProp, lang: langProp, set
       .attr("opacity", 0.7);
 
     // Token image
-    node.append("image")
-      .attr("href", d => `https://s2.coinmarketcap.com/static/img/coins/64x64/${CMC_IDS[d.symbol]}.png`)
+    // Token image via foreignObject (HTML img for better compatibility)
+    node.append("foreignObject")
       .attr("x", -12).attr("y", -12)
       .attr("width", 24).attr("height", 24)
       .attr("clip-path", d => `url(#clip-${d.id})`)
-      .attr("opacity", 0.95);
+      .append("xhtml:img")
+      .attr("src", d => `https://s2.coinmarketcap.com/static/img/coins/32x32/${CMC_IDS[d.symbol]}.png`)
+      .attr("width", 24).attr("height", 24)
+      .style("border-radius", "50%")
+      .style("display", "block");
+
 
     // Conclusion badge
     node.append("circle")
@@ -404,8 +420,8 @@ export default function VerdictGraph({ symbols: symbolsProp, lang: langProp, set
       .text(d => new Date(d.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
 
     const sim = d3.forceSimulation<VerdictNode>(nodes)
-      .force("link", d3.forceLink<VerdictNode, VerdictEdge>(validEdges).id(d => d.id).distance(d => 130 + (1 - d.strength) * 80).strength(0.25))
-      .force("charge", d3.forceManyBody().strength(-320))
+      .force("link", d3.forceLink<VerdictNode, VerdictEdge>(validEdges).id(d => d.id).distance(d => 180 + (1 - d.strength) * 100).strength(0.2))
+      .force("charge", d3.forceManyBody().strength(-600))
       .force("center", d3.forceCenter(w / 2, h / 2))
       .force("collision", d3.forceCollide(55))
       .on("tick", () => {

@@ -52,8 +52,10 @@ export default function SymbolSelector({ symbols, onChange, lang }: Props) {
 
   const add = (sym: string) => {
     if (symbols.length >= 4) return;
-    onChange([...symbols, sym]);
+    const newSymbols = [...symbols, sym];
+    onChange(newSymbols);
     setSearch("");
+    if (newSymbols.length >= 4) setOpen(false);
   };
 
   return (
