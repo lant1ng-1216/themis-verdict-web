@@ -19,8 +19,10 @@ interface CollabNode {
   stats?: { requests_total: number; requests_today: number; accuracy_rate?: number };
 }
 interface GridNode extends CollabNode {
-  phi: number;   // polar angle (0..π), random, not grid-snapped
-  theta: number; // azimuthal angle (0..2π), random
+  phi: number;
+  theta: number;
+  latIdx: number;
+  lonIdx: number;
 }
 
 const LAT_LINES = 18;  // latitude grid lines (~10° spacing)
