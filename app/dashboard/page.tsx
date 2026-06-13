@@ -180,7 +180,7 @@ function Sidebar({ active, setActive, lang, plan, consoleTab, isDeveloper, devNa
       {/* User profile */}
       <div style={{ padding: "14px 16px", borderTop: "1px solid #f1f5f9" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, fontWeight: 700, color: "#0a1a3a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName}</div>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 2 }}>

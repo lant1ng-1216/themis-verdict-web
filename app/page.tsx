@@ -103,7 +103,7 @@ export function SiteNav({ lang, onLangChange, verdictCount }: { lang: string; on
             <Link href="/dashboard" style={{ fontFamily: M, fontSize: 11, fontWeight: 700, color: "#fff", background: "#0047cc", padding: "6px 16px", borderRadius: 8, textDecoration: "none", letterSpacing: "0.04em" }}>
               {lang === "zh" ? "控制台" : "DASHBOARD"} →
             </Link>
-            <UserButton afterSignOutUrl="/" />
+            <UserButton />
           </div>
         ) : (
           <SignInButton mode="modal">
