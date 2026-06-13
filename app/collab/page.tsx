@@ -157,7 +157,9 @@ export default function CollabPage() {
       while (used.has(slotIdx)) slotIdx = (slotIdx + 1) % cellsByDist.length;
       used.add(slotIdx);
       const idx = cellsByDist[slotIdx];
-      return { ...n, latIdx: Math.floor(idx / LON_LINES), lonIdx: idx % LON_LINES };
+      const latIdx = Math.floor(idx / LON_LINES);
+      const lonIdx = idx % LON_LINES;
+      return { ...n, latIdx, lonIdx, phi: (latIdx + 1) * LAT_STEP, theta: lonIdx * LON_STEP };
     });
     setNodes(placed);
     nodesRef.current = placed;
