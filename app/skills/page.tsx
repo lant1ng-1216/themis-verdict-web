@@ -5,7 +5,7 @@ import { SiteNav } from "../page";
 import { useUser } from "@clerk/nextjs";
 
 const M = "JetBrains Mono, monospace";
-const API = process.env.NEXT_PUBLIC_AGENT_API || "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_AGENT_API || "https://api.themisverdict.xyz";
 
 const ALL_TAGS = ["全部", "中低频", "高频", "7维度", "AI裁决", "套利", "官方"];
 

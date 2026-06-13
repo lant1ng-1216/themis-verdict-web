@@ -3,7 +3,7 @@ import { useUser, useClerk, UserButton } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_AGENT_API || "https://api.themisverdict.xyz";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type NavItem = "overview" | "apikeys" | "usage" | "billing";

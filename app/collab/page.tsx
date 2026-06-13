@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 
 const M = "JetBrains Mono, monospace";
-const AGENT_API = process.env.NEXT_PUBLIC_AGENT_API || "http://localhost:8000";
+const AGENT_API = process.env.NEXT_PUBLIC_AGENT_API || "https://api.themisverdict.xyz";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface CollabNode {

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, Fragment } from "react";
 import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
-const API_BASE = process.env.NEXT_PUBLIC_AGENT_API || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_AGENT_API || "https://api.themisverdict.xyz";
 
 const VIDEO_URL = "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260525_070034_60e5670b-6bb0-402b-a6c1-c9a8c05ae3a4.mp4";
 const M = "JetBrains Mono, monospace";
@@ -409,8 +409,8 @@ export default function Home() {
               {
                 icon: (
                   <svg width={13} height={13} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="14" height="14" rx="2"/><path d="M8 12l4-4M12 12V8M8 8h4" opacity="0.5"/><path d="M11 9l-3 3"/>
-                    <path d="M8.5 8.5l3 0 0 3"/>
+                    <rect x="3" y="3" width="14" height="14" rx="2"/>
+                    <path d="M8 12l4-4"/><path d="M12 8v4"/><path d="M8 8h4"/>
                   </svg>
                 ),
                 label: lang === "zh" ? "合约" : "CONTRACT",

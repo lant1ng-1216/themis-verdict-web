@@ -4,7 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://api.themisverdict.xyz";
 const M = "JetBrains Mono, monospace";
 
 export default function PublishSkillPage() {

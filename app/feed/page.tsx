@@ -4,7 +4,7 @@ import { SiteNav } from "../page";
 import { useUser, SignInButton } from "@clerk/nextjs";
 
 const M = "JetBrains Mono, monospace";
-const API = process.env.NEXT_PUBLIC_AGENT_API || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_AGENT_API || process.env.NEXT_PUBLIC_API_URL || "https://api.themisverdict.xyz";
 
 type VerdictStatus = "ACTIVE" | "VERIFIED" | "INVALIDATED";
 type Direction = "BULLISH" | "BEARISH";
@@ -708,9 +708,9 @@ export default function FeedPage() {
             weight: d.weight || d.score || 0.5,
             note: d.note || d.reason || "",
           })),
-          betFor: 50 + Math.floor(Math.sin(i * 3) * 20),
-          betAgainst: 50 - Math.floor(Math.sin(i * 3) * 20),
-          betCount: 0,
+          betFor: v.bet_for_pct ?? (50 + Math.floor(Math.sin(i * 3) * 20)),
+          betAgainst: v.bet_against_pct ?? (50 - Math.floor(Math.sin(i * 3) * 20)),
+          betCount: v.bet_count ?? 0,
           timestamp: v.timestamp ? new Date(v.timestamp).getTime() : Date.now() - i * 60000 * 30,
           comments: [],
           // on-chain
@@ -737,12 +737,28 @@ export default function FeedPage() {
   function addPost(p: Post) { setPosts(prev=>[p,...prev]); }
 
   function handleBet(id: string, side: "for"|"against") {
+    // Optimistic update
     setPosts(prev=>prev.map(p=>p.id!==id?p:{
       ...p,
       betFor:     side==="for"    ?Math.min((p.betFor ||50)+2,99):Math.max((p.betFor ||50)-2,1),
       betAgainst: side==="against"?Math.min((p.betAgainst||50)+2,99):Math.max((p.betAgainst||50)-2,1),
       betCount:(p.betCount||0)+1,
     }));
+    // Persist to backend
+    fetch(`${API}/api/accuracy/verdict/bet`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ verdict_id: id, side, user_id: user?.id }),
+    }).then(r => r.json()).then(data => {
+      if (data.bet_for_pct !== undefined) {
+        setPosts(prev => prev.map(p => p.id !== id ? p : {
+          ...p,
+          betFor: data.bet_for_pct,
+          betAgainst: data.bet_against_pct,
+          betCount: data.bet_count,
+        }));
+      }
+    }).catch(() => {});
   }
 
   function handleLike(id: string) {

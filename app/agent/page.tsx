@@ -5,7 +5,7 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-const AGENT_API = process.env.NEXT_PUBLIC_AGENT_API || "http://localhost:8000";
+const AGENT_API = process.env.NEXT_PUBLIC_AGENT_API || "https://api.themisverdict.xyz";
 
 interface Message {
   id: string;
@@ -1928,8 +1928,6 @@ const QUICK_PROMPTS_I18N: Record<string, { label: string; msg: string }[]> = {
 function CollabPanel({ lang, userId }: { lang: string; userId: string }) {
   const t = (zh: string, en: string) => lang === "zh" ? zh : en;
   const M = "JetBrains Mono, monospace";
-  const AGENT_API = process.env.NEXT_PUBLIC_AGENT_API || "http://localhost:8000";
-
   const [node, setNode] = useState<any>(null);
   const [pool, setPool] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

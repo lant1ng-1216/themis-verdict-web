@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-const API = process.env.NEXT_PUBLIC_AGENT_API || "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_AGENT_API || "https://api.themisverdict.xyz";
 const ADMIN_KEY = process.env.NEXT_PUBLIC_ADMIN_KEY || "themis-admin-dev-key";
 
 const adminFetch = (path: string) =>

@@ -166,7 +166,7 @@ const FAQS = [
 
 const PAYMENT_WALLET = "0xB0088d6Eb46c3C15D878b54900ce1d5AEad54bD7";
 const PLAN_PRICES_MAP: Record<string, number> = { standard: 29, pro: 99, agent: 299 };
-const API_BASE = process.env.NEXT_PUBLIC_AGENT_API || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_AGENT_API || "https://api.themisverdict.xyz";
 
 export default function PricingPage() {
   const { isSignedIn, isLoaded, user } = useUser();

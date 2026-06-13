@@ -6,7 +6,7 @@ import { SiteNav } from "../../page";
 import { useUser } from "@clerk/nextjs";
 
 const M = "JetBrains Mono, monospace";
-const API = process.env.NEXT_PUBLIC_AGENT_API || "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_AGENT_API || "https://api.themisverdict.xyz";
 
 const TAG_EN: Record<string, string> = {
   "全部": "All", "中低频": "Mid-Low Freq", "高频": "High Freq",
