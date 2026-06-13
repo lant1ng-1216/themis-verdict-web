@@ -53,7 +53,7 @@ export function SiteNav({ lang, onLangChange, verdictCount }: { lang: string; on
             { href: "/verdict",   en: "Court · Verdict",  zh: "法庭 · 裁决分析", desc: t("7-dimension AI market analysis","7维度 AI 市场分析") },
             { href: "/agent",     en: "Themis Agent",     zh: "交易 Agent",      desc: t("Autonomous AI trading agent","自主 AI 交易代理") },
             { href: "/skills",    en: "Skill Market",     zh: "Skill 市场",      desc: t("Discover & deploy trading skills","发现并部署交易策略 Skill") },
-            { href: "/feed",      en: "Verdict Feed",     zh: "裁决广播",        desc: t("Live feed + on-chain protocol","实时广播 + 链上协议"), soon: true },
+            { href: "/feed",      en: "Verdict Feed",     zh: "裁决广播",        desc: t("Live feed + on-chain protocol","实时广播 + 链上协议") },
           ]} />}
         </div>
 
@@ -119,7 +119,7 @@ export function SiteNav({ lang, onLangChange, verdictCount }: { lang: string; on
 
 // ── Math Viz (Canvas 4-quadrant) ─────────────────────────────────────────────
 type AccSymbol = { total: number; correct: number; rate: number | null; history: { correct: boolean }[] };
-type AccData = { overall: { total: number; correct: number; rate: number | null }; symbols: Record<string, AccSymbol>; call_count?: number };
+type AccData = { overall: { total: number; correct: number; rate: number | null }; symbols: Record<string, AccSymbol>; call_count?: number; onchain?: { total: number; hits: number; rate: number | null; source: string } };
 
 function GlobeViz() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -453,8 +453,15 @@ export default function Home() {
               <span style={{ fontFamily: M, fontSize: 13, fontWeight: 800, color: "#0a1a3a" }}>{totalCount}+</span>
             </div>
             {sep}
+            {(accData?.onchain?.total ?? 0) > 0 && <>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                <span style={{ fontFamily: M, fontSize: 9, color: "#f59e0b", letterSpacing: "0.14em" }}>⬡ {lang === "zh" ? "链上存证" : "ON-CHAIN"}</span>
+                <span style={{ fontFamily: M, fontSize: 13, fontWeight: 800, color: "#f59e0b" }}>{accData!.onchain!.total}</span>
+              </div>
+              {sep}
+            </>}
             <span style={{ fontFamily: M, fontSize: 8.5, color: "rgba(10,26,58,0.3)", letterSpacing: "0.12em", flexShrink: 0 }}>
-              {lang === "zh" ? "裁决发出 24H 后对比市价验证" : "ACCURACY VERIFIED 24H POST-ISSUE"}
+              {lang === "zh" ? "裁决发出 24H 后对比市价验证 · BSC 链上存证" : "ACCURACY VERIFIED 24H POST-ISSUE · RECORDED ON BSC"}
             </span>
             {sep}
           </>
