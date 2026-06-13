@@ -66,7 +66,7 @@ export default function DesktopAuthPage() {
               card: { boxShadow: "0 8px 40px rgba(0,20,80,0.10)", border: "1px solid rgba(0,71,204,0.1)" },
             },
           }}
-          afterSignInUrl="/desktop-auth"
+          forceRedirectUrl="/desktop-auth"
           signUpUrl="/sign-up"
         />
       )}
