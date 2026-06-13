@@ -103,8 +103,8 @@ function CountUp({ target, color }: { target: number; color: string }) {
   return <span style={{ color, fontFamily: "var(--font-mono)", fontSize: 56, fontWeight: 700, lineHeight: 1, letterSpacing: "-0.02em" }}>{val}%</span>;
 }
 
-export default function VerdictApp({ onBack, lang, setLang }: { onBack: () => void; lang: string; setLang: (l: string) => void }) {
-  const [mode, setMode] = useState<"select" | "single" | "multi">("select");
+export default function VerdictApp({ onBack, lang, setLang, hideHeader }: { onBack: () => void; lang: string; setLang: (l: string) => void; hideHeader?: boolean }) {
+  const [mode, setMode] = useState<"select" | "single" | "multi">("single");
   const [symbol, setSymbol] = useState("");
   const [step, setStep] = useState<Step>("idle");
   const [logs, setLogs] = useState<LogLine[]>([]);
@@ -158,7 +158,7 @@ export default function VerdictApp({ onBack, lang, setLang }: { onBack: () => vo
     } catch (e) { setError(String(e)); setStep("error"); }
   };
 
-  const reset = () => { setStep("idle"); setMode("select"); setLogs([]); setEvidence([]); setRegime(null); setVerdict(null); setError(null); };
+  const reset = () => { setStep("idle"); setMode("single"); setLogs([]); setEvidence([]); setRegime(null); setVerdict(null); setError(null); };
 
   const conclusionColor = verdict?.conclusion === "bearish" ? "#e8193c" : verdict?.conclusion === "bullish" ? "#00954a" : "#d4800a";
   const conclusionLabel = verdict?.conclusion === "bearish" ? "BEARISH" : verdict?.conclusion === "bullish" ? "BULLISH" : "NEUTRAL";
@@ -229,23 +229,23 @@ export default function VerdictApp({ onBack, lang, setLang }: { onBack: () => vo
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700, color: "#0047cc", letterSpacing: "0.1em" }}>{lang === "zh" ? "进入 →" : "START →"}</div>
                 </button>
 
-                {/* Card 2: AI Agent Coming Soon */}
-                <button onClick={() => alert(lang === "zh" ? "即将推出，敬请期待 🚀" : "Coming Soon 🚀")}
+                {/* Card 2: AI Agent */}
+                <button onClick={() => { window.location.href = "/agent"; }}
                   style={{ ...glassStrong, padding: "32px 28px", cursor: "pointer", textAlign: "left", transition: "all 0.25s", position: "relative", overflow: "hidden" }}
-                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = "translateY(-4px)"; el.style.boxShadow = "0 24px 64px rgba(102,51,204,0.14), 0 0 0 1.5px #6633cc33"; }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = "translateY(-4px)"; el.style.boxShadow = "0 24px 64px rgba(0,71,204,0.18), 0 0 0 1.5px #0047cc44"; }}
                   onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = ""; el.style.boxShadow = "0 16px 48px rgba(0,40,120,0.12)"; }}
                 >
-                  <div style={{ position: "absolute", top: 16, right: 16, fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, color: "#6633cc", background: "rgba(102,51,204,0.08)", border: "1px solid rgba(102,51,204,0.2)", padding: "3px 10px", borderRadius: 20, letterSpacing: "0.1em" }}>{lang === "zh" ? "即将推出" : "COMING SOON"}</div>
+                  <div style={{ position: "absolute", top: 16, right: 16, fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, color: "#0047cc", background: "rgba(0,71,204,0.08)", border: "1px solid rgba(0,71,204,0.2)", padding: "3px 10px", borderRadius: 20, letterSpacing: "0.1em" }}>BETA</div>
                   <div style={{ fontSize: 32, marginBottom: 16 }}>🤖</div>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#6633cc", letterSpacing: "0.15em", marginBottom: 6, fontWeight: 600 }}>{lang === "zh" ? "AI 代理交易" : "AI AGENT TRADING"}</div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#0047cc", letterSpacing: "0.15em", marginBottom: 6, fontWeight: 600 }}>{lang === "zh" ? "AI 代理交易" : "AI AGENT TRADING"}</div>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 700, color: "#0a1a3a", marginBottom: 12 }}>{lang === "zh" ? "AI Agent 交易代理" : "AI Agent Execution Layer"}</div>
-                  <div style={{ fontSize: 13, color: "rgba(10,26,58,0.5)", lineHeight: 1.7, marginBottom: 16 }}>{lang === "zh" ? "领取 Themis 官方 AI Agent 自动执行基于裁决信号的交易策略，或将你自己的 Agent 部署到 Themis 生态，接入实时裁决数据流。" : "Deploy the official Themis AI Agent to auto-execute strategies based on verdict signals, or bring your own Agent and plug it into the Themis real-time verdict data stream."}</div>
+                  <div style={{ fontSize: 13, color: "rgba(10,26,58,0.65)", lineHeight: 1.7, marginBottom: 16 }}>{lang === "zh" ? "部署 Themis 官方 AI Agent，基于裁决信号自动执行交易策略，实时信号监控，半自动与全自动模式可选。" : "Deploy the official Themis AI Agent to auto-execute strategies based on verdict signals. Real-time signal monitoring with semi-auto and full-auto modes."}</div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
-                    {(lang === "zh" ? ["官方 Agent 领取", "自定义 Agent 部署", "实时信号接入", "策略自动执行"] : ["Official Agent", "Custom Deployment", "Live Signal Feed", "Auto Execution"]).map(tag => (
-                      <span key={tag} style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "rgba(102,51,204,0.6)", background: "rgba(102,51,204,0.05)", border: "1px solid rgba(102,51,204,0.12)", padding: "3px 8px", borderRadius: 4 }}>{tag}</span>
+                    {(lang === "zh" ? ["信号监控", "半自动交易", "风控管理", "实时裁决"] : ["Signal Monitor", "Semi-Auto Trade", "Risk Control", "Live Verdict"]).map(tag => (
+                      <span key={tag} style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "#0047cc", background: "rgba(0,71,204,0.06)", border: "1px solid rgba(0,71,204,0.15)", padding: "3px 8px", borderRadius: 4 }}>{tag}</span>
                     ))}
                   </div>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700, color: "rgba(102,51,204,0.5)", letterSpacing: "0.1em" }}>{lang === "zh" ? "敬请期待 →" : "COMING SOON →"}</div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700, color: "#0047cc", letterSpacing: "0.1em" }}>{lang === "zh" ? "启动 Agent →" : "LAUNCH AGENT →"}</div>
                 </button>
 
               </div>
@@ -257,7 +257,6 @@ export default function VerdictApp({ onBack, lang, setLang }: { onBack: () => vo
         {(mode === "single" || mode === "multi") && step === "idle" && (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
             <div style={{ width: "100%", maxWidth: 520 }}>
-              <button onClick={() => setMode("select")} style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "rgba(10,26,58,0.5)", background: "none", border: "none", cursor: "pointer", marginBottom: 32, letterSpacing: "0.05em" }}>← {lang === "zh" ? "返回" : "Back"}</button>
 
               <div style={{ textAlign: "center", marginBottom: 32 }}>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "rgba(0,71,204,0.6)", letterSpacing: "0.3em", marginBottom: 8 }}>{lang === "zh" ? "终端可视化分析" : "TERMINAL VISUAL ANALYSIS"}</div>

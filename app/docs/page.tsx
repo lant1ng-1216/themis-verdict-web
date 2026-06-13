@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useState } from "react";
+import { SiteNav } from "../page";
 
 const SECTIONS = [
   { id: "introduction", en: "Introduction", zh: "简介", children: [] },
@@ -24,12 +24,6 @@ const SECTIONS = [
       { id: "api-endpoints", en: "Endpoints", zh: "接口列表" },
       { id: "api-auth", en: "Authentication", zh: "鉴权方式" },
       { id: "api-quickstart", en: "Quickstart", zh: "快速接入" },
-    ],
-  },
-  {
-    id: "onchain", en: "On-Chain Protocol", zh: "链上协议", children: [
-      { id: "onchain-design", en: "Protocol Design", zh: "协议设计" },
-      { id: "onchain-contracts", en: "Contracts", zh: "合约地址" },
     ],
   },
   { id: "roadmap", en: "Roadmap", zh: "路线图", children: [] },
@@ -56,11 +50,14 @@ const SoonBlock = ({ lang }: { lang: string }) => (
 );
 
 export default function DocsPage() {
-  const [lang, setLang] = useState("en");
+  const [lang, setLang] = useState<string>(() => {
+    if (typeof window === "undefined") return "en";
+    return localStorage.getItem("themis_lang") || "en";
+  });
   const [active, setActive] = useState("introduction");
   const [expanded, setExpanded] = useState<string[]>(["architecture", "skill", "agent-api"]);
 
-  useEffect(() => { setLang(localStorage.getItem("themis_lang") || "en"); }, []);
+  const handleLang = (l: string) => { setLang(l); localStorage.setItem("themis_lang", l); };
   const t = (en: string, zh: string) => lang === "zh" ? zh : en;
 
   const toggle = (id: string) => setExpanded(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
@@ -110,9 +107,44 @@ export default function DocsPage() {
       <div>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 20 }}>
           <h2 style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 22, fontWeight: 700, color: "#0a1a3a" }}>{t("Architecture Overview", "系统架构总览")}</h2>
-          <SoonBadge lang={lang} />
+          <EarlyBadge lang={lang} />
         </div>
-        <SoonBlock lang={lang} />
+        <p style={{ fontSize: 14, color: "rgba(10,26,58,0.65)", lineHeight: 1.9, marginBottom: 24 }}>
+          {t("Themis operates across four independent layers. Each layer is self-contained and can be used independently, while data flows upward from raw market signals to structured verdicts.",
+            "Themis 运行于四个独立层次。每层均可单独使用，数据从原始市场信号向上流动，最终形成结构化裁决。")}
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 3, marginBottom: 28 }}>
+          {[
+            { layer: "L4", label: t("On-Chain Protocol", "链上协议"), color: "#6633cc", icon: "🔗", desc: t("Verdict NFTs, staking, and on-chain accuracy registry. Future layer.", "裁决 NFT、质押机制与链上准确率登记。未来层级。"), status: t("Planned", "规划中") },
+            { layer: "L3", label: t("Agent Subscription API", "Agent 订阅 API"), color: "#0047cc", icon: "🔌", desc: t("REST + SSE endpoints delivering pre-computed verdict signals to external agents and developers.", "REST + SSE 接口，向外部 Agent 和开发者提供预计算裁决信号。"), status: t("Building", "建设中") },
+            { layer: "L2", label: t("Web Interface", "网页界面"), color: "#00954a", icon: "🖥", desc: t("Public dashboard: real-time verdict feed, regime monitor, position management, and developer portal.", "公开看板：实时裁决 Feed、状态监控、持仓管理与开发者门户。"), status: t("Live", "上线") },
+            { layer: "L1", label: t("Terminal Analysis System", "终端分析系统"), color: "#d4800a", icon: "⚙", desc: t("Core AI agent running the 7-step workflow. Fetches live CMC data, runs Three-Court process, stores verdicts in Redis.", "核心 AI Agent 运行7步工作流。实时获取 CMC 数据，运行三庭流程，将裁决存储至 Redis。"), status: t("Live", "上线") },
+          ].map(({ layer, label, color, icon, desc, status }) => (
+            <div key={layer} style={{ display: "flex", gap: 14, alignItems: "stretch" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 32 }}>
+                <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, fontWeight: 700, color, background: `${color}12`, width: 28, height: 28, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{layer}</div>
+                {layer !== "L1" && <div style={{ width: 1, flex: 1, background: "rgba(0,0,0,0.08)", margin: "3px 0" }} />}
+              </div>
+              <div style={{ flex: 1, background: "rgba(255,255,255,0.7)", border: `1px solid ${color}22`, borderLeft: `3px solid ${color}`, borderRadius: 10, padding: "14px 18px", marginBottom: layer !== "L1" ? 0 : 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 15 }}>{icon}</span>
+                  <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 13, fontWeight: 700, color: "#0a1a3a" }}>{label}</span>
+                  <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color, background: `${color}10`, padding: "2px 7px", borderRadius: 4, marginLeft: "auto" }}>{status}</span>
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(10,26,58,0.55)", lineHeight: 1.6 }}>{desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ background: "rgba(0,71,204,0.04)", border: "1px solid rgba(0,71,204,0.12)", borderRadius: 10, padding: "16px 20px" }}>
+          <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: "#0047cc", letterSpacing: "0.1em", marginBottom: 10 }}>{t("DATA FLOW", "数据流向")}</div>
+          <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "rgba(10,26,58,0.6)", lineHeight: 2 }}>
+            CMC Live Data → Evidence Engine (7 dims)<br/>
+            → Regime Classifier → Three-Court Process<br/>
+            → Verdict (Redis) → Web Feed / Agent API<br/>
+            → Bayesian Weight Update (24H loop)
+          </div>
+        </div>
       </div>
     ),
 
@@ -389,22 +421,24 @@ export default function DocsPage() {
           <EarlyBadge lang={lang} />
         </div>
         <p style={{ fontSize: 14, color: "rgba(10,26,58,0.65)", lineHeight: 1.9, marginBottom: 24 }}>
-          {t("The Themis Agent API provides real-time verdict signals. Below is the planned endpoint structure. Full implementation coming in v0.4.",
-            "Themis Agent API 提供实时裁决信号。以下是计划中的接口结构，完整实现将在 v0.4 推出。")}
+          {t("The Themis Agent API provides real-time verdict signals via REST and SSE. All endpoints require an API key — see Authentication for details.",
+            "Themis Agent API 通过 REST 和 SSE 提供实时裁决信号。所有接口均需 API Key，详见鉴权方式。")}
         </p>
         <div style={{ background: "#0a1a3a", borderRadius: 12, padding: "20px 24px", marginBottom: 20 }}>
-          <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.15em", marginBottom: 16 }}>ENDPOINTS</div>
+          <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.15em", marginBottom: 16 }}>BASE URL: https://api.themisverdict.xyz</div>
           {[
-            { method: "GET", path: "/api/v1/verdict/latest", params: "?symbol=BTC", desc: t("Latest verdict for any asset", "获取任意资产最新裁决"), status: "planned" },
-            { method: "GET", path: "/api/v1/verdict/stream", params: "", desc: t("SSE real-time verdict stream", "SSE 实时裁决数据流"), status: "planned" },
-            { method: "GET", path: "/api/v1/verdict/history", params: "?symbol=BTC&limit=24", desc: t("Historical verdicts with accuracy", "历史裁决记录及准确率"), status: "planned" },
-            { method: "GET", path: "/api/v1/regime/current", params: "", desc: t("Current market regime snapshot", "当前市场状态快照"), status: "planned" },
-            { method: "GET", path: "/api/v1/graph/edges", params: "?date=today", desc: t("Verdict relation graph data", "裁决关系图谱数据"), status: "planned" },
-          ].map(({ method, path, params, desc, status }) => (
-            <div key={path} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-              <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, fontWeight: 700, color: "#00cc66", background: "rgba(0,204,102,0.1)", padding: "2px 6px", borderRadius: 4, flexShrink: 0 }}>{method}</span>
-              <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, color: "#7ab8ff" }}>{path}<span style={{ color: "rgba(255,255,255,0.3)" }}>{params}</span></span>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginLeft: "auto", flexShrink: 0 }}>{desc}</span>
+            { method: "GET", path: "/api/v1/verdict/latest", params: "?symbol=BTC", plan: "Standard+", desc: t("Latest verdict for any asset", "获取任意资产最新裁决") },
+            { method: "GET", path: "/api/v1/verdict/stream", params: "", plan: "Pro+", desc: t("SSE real-time verdict stream", "SSE 实时裁决数据流") },
+            { method: "GET", path: "/api/v1/verdict/history", params: "?symbol=BTC&limit=24", plan: "Standard+", desc: t("Historical verdicts with accuracy stats", "历史裁决记录及准确率") },
+            { method: "GET", path: "/api/v1/regime/current", params: "", plan: "Free", desc: t("Current market regime snapshot", "当前市场状态快照") },
+            { method: "GET", path: "/api/v1/accuracy/stats", params: "?symbol=BTC", plan: "Standard+", desc: t("Signal accuracy & Bayesian weights", "信号准确率与贝叶斯权重") },
+            { method: "GET", path: "/api/v1/graph/edges", params: "?date=today", plan: "Agent", desc: t("Verdict relation graph data", "裁决关系图谱数据") },
+          ].map(({ method, path, params, plan, desc }) => (
+            <div key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, fontWeight: 700, color: "#00cc66", background: "rgba(0,204,102,0.1)", padding: "2px 6px", borderRadius: 4, flexShrink: 0, width: 36, textAlign: "center" }}>{method}</span>
+              <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, color: "#7ab8ff", flex: 1 }}>{path}<span style={{ color: "rgba(255,255,255,0.3)" }}>{params}</span></span>
+              <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 9, color: plan === "Free" ? "#00cc66" : plan === "Agent" ? "#cc66ff" : "#ffcc00", background: plan === "Free" ? "rgba(0,204,102,0.12)" : plan === "Agent" ? "rgba(204,102,255,0.12)" : "rgba(255,204,0,0.12)", padding: "2px 6px", borderRadius: 4, flexShrink: 0 }}>{plan}</span>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", flexShrink: 0, maxWidth: 160, textAlign: "right" }}>{desc}</span>
             </div>
           ))}
         </div>
@@ -433,9 +467,42 @@ export default function DocsPage() {
       <div>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 20 }}>
           <h2 style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 22, fontWeight: 700, color: "#0a1a3a" }}>{t("Authentication", "鉴权方式")}</h2>
-          <SoonBadge lang={lang} />
+          <EarlyBadge lang={lang} />
         </div>
-        <SoonBlock lang={lang} />
+        <p style={{ fontSize: 14, color: "rgba(10,26,58,0.65)", lineHeight: 1.9, marginBottom: 24 }}>
+          {t("All API requests must include your API key in the request header. Keys are tied to your subscription plan and enforce rate limits automatically.",
+            "所有 API 请求必须在请求头中携带 API Key。Key 与订阅计划绑定，并自动执行频率限制。")}
+        </p>
+        <div style={{ background: "#0a1a3a", borderRadius: 12, padding: "20px 24px", marginBottom: 20 }}>
+          <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.15em", marginBottom: 12 }}>{t("REQUEST HEADER", "请求头")}</div>
+          <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 13, color: "#7ab8ff" }}>X-API-Key: <span style={{ color: "#ffcc00" }}>tmv_xxxxxxxxxxxxxxxxxxxx</span></div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+          {[
+            { plan: "Free", color: "#00954a", rateLimit: t("60 req/day", "60次/天"), access: t("Regime snapshot only", "仅市场状态快照") },
+            { plan: "Standard", color: "#0047cc", rateLimit: t("1,000 req/day", "1,000次/天"), access: t("Verdict latest, history, accuracy stats", "最新裁决、历史记录、准确率") },
+            { plan: "Pro", color: "#d4800a", rateLimit: t("10,000 req/day + SSE stream", "10,000次/天 + SSE流"), access: t("All endpoints including real-time stream", "所有接口含实时数据流") },
+            { plan: "Agent", color: "#6633cc", rateLimit: t("Unlimited + priority queue", "无限制 + 优先队列"), access: t("All endpoints + graph data + webhooks", "所有接口 + 图谱数据 + Webhook") },
+          ].map(({ plan, color, rateLimit, access }) => (
+            <div key={plan} style={{ background: "rgba(255,255,255,0.7)", border: `1px solid ${color}22`, borderRadius: 10, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14 }}>
+              <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, fontWeight: 700, color, background: `${color}10`, padding: "4px 10px", borderRadius: 6, flexShrink: 0 }}>{plan}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, color: "#0a1a3a", marginBottom: 2 }}>{rateLimit}</div>
+                <div style={{ fontSize: 12, color: "rgba(10,26,58,0.5)" }}>{access}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ background: "rgba(0,71,204,0.04)", border: "1px solid rgba(0,71,204,0.12)", borderRadius: 10, padding: "16px 20px" }}>
+          <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: "#0047cc", letterSpacing: "0.1em", marginBottom: 8 }}>{t("GET YOUR API KEY", "获取 API Key")}</div>
+          <p style={{ fontSize: 13, color: "rgba(10,26,58,0.6)", marginBottom: 12, lineHeight: 1.7 }}>
+            {t("API keys are generated from the Dashboard. Each key is prefixed with tmv_ and can be rotated at any time without changing your plan.",
+              "API Key 在控制台生成，以 tmv_ 开头，可随时轮换而不影响订阅计划。")}
+          </p>
+          <a href="/dashboard" style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, fontWeight: 700, color: "#0047cc", textDecoration: "none", background: "rgba(0,71,204,0.08)", border: "1px solid rgba(0,71,204,0.2)", padding: "6px 14px", borderRadius: 6, display: "inline-block" }}>
+            {t("Open Dashboard →", "打开控制台 →")}
+          </a>
+        </div>
       </div>
     ),
 
@@ -443,29 +510,64 @@ export default function DocsPage() {
       <div>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 20 }}>
           <h2 style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 22, fontWeight: 700, color: "#0a1a3a" }}>{t("Quickstart", "快速接入")}</h2>
-          <SoonBadge lang={lang} />
+          <EarlyBadge lang={lang} />
         </div>
-        <SoonBlock lang={lang} />
-      </div>
-    ),
+        <p style={{ fontSize: 14, color: "rgba(10,26,58,0.65)", lineHeight: 1.9, marginBottom: 24 }}>
+          {t("Get your first verdict in under 60 seconds. Replace YOUR_API_KEY with the key from your Dashboard.",
+            "60 秒内获取第一条裁决。将 YOUR_API_KEY 替换为控制台中的 Key。")}
+        </p>
+        {[
+          {
+            lang: "curl", label: "cURL",
+            code: `curl -X GET "https://api.themisverdict.xyz/api/v1/verdict/latest?symbol=BTC" \\
+  -H "X-API-Key: YOUR_API_KEY"`,
+          },
+          {
+            lang: "python", label: "Python",
+            code: `import requests
 
-    "onchain-design": (
-      <div>
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 20 }}>
-          <h2 style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 22, fontWeight: 700, color: "#0a1a3a" }}>{t("Protocol Design", "协议设计")}</h2>
-          <SoonBadge lang={lang} />
+res = requests.get(
+    "https://api.themisverdict.xyz/api/v1/verdict/latest",
+    params={"symbol": "BTC"},
+    headers={"X-API-Key": "YOUR_API_KEY"}
+)
+verdict = res.json()
+print(verdict["conclusion"], verdict["confidence"])`,
+          },
+          {
+            lang: "js", label: "JavaScript",
+            code: `const res = await fetch(
+  "https://api.themisverdict.xyz/api/v1/verdict/latest?symbol=BTC",
+  { headers: { "X-API-Key": "YOUR_API_KEY" } }
+);
+const verdict = await res.json();
+console.log(verdict.conclusion, verdict.confidence);`,
+          },
+        ].map(({ lang: l, label, code }) => (
+          <div key={l} style={{ marginBottom: 16 }}>
+            <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: "rgba(10,26,58,0.4)", letterSpacing: "0.1em", marginBottom: 6 }}>{label}</div>
+            <div style={{ background: "#0a1a3a", borderRadius: 10, padding: "16px 20px", fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.8, overflowX: "auto", whiteSpace: "pre" }}>{code}</div>
+          </div>
+        ))}
+        <div style={{ background: "rgba(0,149,74,0.05)", border: "1px solid rgba(0,149,74,0.15)", borderRadius: 10, padding: "16px 20px", marginTop: 8 }}>
+          <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: "#00954a", letterSpacing: "0.1em", marginBottom: 8 }}>{t("EXAMPLE RESPONSE", "响应示例")}</div>
+          <div style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "rgba(10,26,58,0.6)", lineHeight: 1.8 }}>
+            {"{"}<br/>
+            &nbsp;&nbsp;"verdict_id": "VP-20260611091511-BTC",<br/>
+            &nbsp;&nbsp;"symbol": "BTC",<br/>
+            &nbsp;&nbsp;"conclusion": "bearish",<br/>
+            &nbsp;&nbsp;"confidence": 75,<br/>
+            &nbsp;&nbsp;"regime": "PANIC_SELLOFF",<br/>
+            &nbsp;&nbsp;"intensity": 28,<br/>
+            &nbsp;&nbsp;"entry_price": 63400,<br/>
+            &nbsp;&nbsp;"target1": 60500,<br/>
+            &nbsp;&nbsp;"target2": 58500,<br/>
+            &nbsp;&nbsp;"stoploss": 65800,<br/>
+            &nbsp;&nbsp;"valid_until": "2026-06-13T09:15:00Z",<br/>
+            &nbsp;&nbsp;"timestamp": "2026-06-11T09:15:00Z"<br/>
+            {"}"}
+          </div>
         </div>
-        <SoonBlock lang={lang} />
-      </div>
-    ),
-
-    "onchain-contracts": (
-      <div>
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 20 }}>
-          <h2 style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 22, fontWeight: 700, color: "#0a1a3a" }}>{t("Contracts", "合约地址")}</h2>
-          <SoonBadge lang={lang} />
-        </div>
-        <SoonBlock lang={lang} />
       </div>
     ),
 
@@ -473,35 +575,78 @@ export default function DocsPage() {
       <div>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 20 }}>
           <h2 style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 22, fontWeight: 700, color: "#0a1a3a" }}>{t("Roadmap", "路线图")}</h2>
-          <SoonBadge lang={lang} />
+          <EarlyBadge lang={lang} />
         </div>
-        <SoonBlock lang={lang} />
+        <p style={{ fontSize: 14, color: "rgba(10,26,58,0.65)", lineHeight: 1.9, marginBottom: 24 }}>
+          {t("Themis is under active development. The roadmap reflects our current priorities — items may shift as we learn from real-world usage.",
+            "Themis 正在积极开发中。路线图反映当前优先级，会随实际使用情况动态调整。")}
+        </p>
+        {[
+          {
+            phase: "v0.1 – v0.3", label: t("Foundation", "基础层"), color: "#00954a", status: t("Completed", "已完成"),
+            items: [
+              t("7-dimension evidence engine with live CMC data", "7维度证据引擎，接入实时 CMC 数据"),
+              t("Three-Court verdict process (Claim → Evidence → Verdict)", "三庭裁决流程（起诉庭 → 证据庭 → 裁决庭）"),
+              t("5-regime classifier with Bayesian accuracy tracking", "5状态分类器 + 贝叶斯准确率追踪"),
+              t("Real-time web dashboard: verdict feed, regime monitor", "实时网页看板：裁决 Feed、状态监控"),
+              t("Binance Demo Futures integration — auto entry/exit", "Binance 模拟期货集成，自动开平仓"),
+              t("Position management UI with P&L tracking", "持仓管理界面 + 盈亏追踪"),
+              t("Developer portal: Agent API docs, plan access table", "开发者门户：Agent API 文档、计划权限表"),
+            ],
+          },
+          {
+            phase: "v0.4", label: t("Agent API Layer", "Agent API 层"), color: "#0047cc", status: t("In Progress", "进行中"),
+            items: [
+              t("REST endpoints: /verdict/latest, /regime/current, /accuracy/stats", "REST 接口上线：latest / regime / accuracy"),
+              t("SSE stream endpoint: /verdict/stream (Pro+)", "SSE 实时流接口（Pro+）"),
+              t("API Key generation and management in Dashboard", "控制台 API Key 生成与管理"),
+              t("Plan-based rate limiting middleware", "基于计划的频率限制中间件"),
+              t("APScheduler: auto-verdict every 30 minutes", "APScheduler：每30分钟自动裁决"),
+            ],
+          },
+          {
+            phase: "v0.5", label: t("Intelligence Layer", "智能层"), color: "#d4800a", status: t("Planned", "规划中"),
+            items: [
+              t("Verdict graph: cross-asset correlation edges", "裁决图谱：跨资产相关性边数据"),
+              t("Appeal mechanism: 24H verdict review with updated data", "上诉机制：24H 后用更新数据重审裁决"),
+              t("Multi-asset portfolio verdict aggregation", "多资产组合裁决聚合"),
+              t("Webhook push notifications for subscribed assets", "订阅资产的 Webhook 推送通知"),
+            ],
+          },
+          {
+            phase: "v1.0", label: t("On-Chain Protocol", "链上协议"), color: "#6633cc", status: t("Future", "未来"),
+            items: [
+              t("Verdict NFTs: immutable on-chain verdict record", "裁决 NFT：不可篡改的链上裁决记录"),
+              t("Accuracy staking: stake on your verdict's accuracy", "准确率质押：对裁决准确率质押"),
+              t("On-chain Bayesian weight registry", "链上贝叶斯权重登记"),
+              t("Decentralized verdict economy", "去中心化裁决经济"),
+            ],
+          },
+        ].map(({ phase, label, color, status, items }) => (
+          <div key={phase} style={{ background: "rgba(255,255,255,0.7)", border: `1px solid ${color}22`, borderLeft: `3px solid ${color}`, borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, fontWeight: 700, color, background: `${color}10`, padding: "3px 8px", borderRadius: 4 }}>{phase}</span>
+              <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 13, fontWeight: 700, color: "#0a1a3a" }}>{label}</span>
+              <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: status === t("Completed", "已完成") ? "#00954a" : status === t("In Progress", "进行中") ? "#0047cc" : "rgba(10,26,58,0.35)", marginLeft: "auto" }}>{status}</span>
+            </div>
+            {items.map(item => (
+              <div key={item} style={{ display: "flex", gap: 8, fontSize: 13, color: "rgba(10,26,58,0.6)", padding: "3px 0" }}>
+                <span style={{ color, flexShrink: 0 }}>·</span>{item}
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     ),
   };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f0f4fb", position: "relative" }}>
-      <div style={{ position: "fixed", inset: 0, backgroundImage: "linear-gradient(rgba(226,232,244,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(226,232,244,0.5) 1px, transparent 1px)", backgroundSize: "40px 40px", pointerEvents: "none" }} />
+      <SiteNav lang={lang} onLangChange={handleLang} />
 
-      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", background: "rgba(255,255,255,0.8)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.5)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Link href="/" style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, color: "#0047cc", background: "rgba(0,71,204,0.08)", border: "1px solid rgba(0,71,204,0.2)", padding: "5px 12px", borderRadius: 8, textDecoration: "none" }}>← {t("Back", "返回")}</Link>
-          <span style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 14, fontWeight: 700, color: "#0a1a3a", letterSpacing: "0.15em" }}>DOCS</span>
-        </div>
-        <div style={{ display: "flex", background: "rgba(0,0,0,0.05)", borderRadius: 6, padding: 2 }}>
-          {["EN","ZH"].map(l => (
-            <button key={l} onClick={() => { setLang(l.toLowerCase()); localStorage.setItem("themis_lang", l.toLowerCase()); }}
-              style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 11, fontWeight: 700, color: lang === l.toLowerCase() ? "#fff" : "rgba(10,26,58,0.4)", background: lang === l.toLowerCase() ? "#0047cc" : "none", border: "none", padding: "4px 10px", borderRadius: 5, cursor: "pointer", transition: "all 0.15s" }}>
-              {l}
-            </button>
-          ))}
-        </div>
-      </header>
-
-      <div style={{ display: "flex", paddingTop: 52, minHeight: "100vh" }}>
+      <div style={{ display: "flex", paddingTop: 56, minHeight: "100vh" }}>
         {/* Sidebar */}
-        <div style={{ width: 220, flexShrink: 0, position: "fixed", top: 52, bottom: 0, left: 0, overflowY: "auto", background: "rgba(255,255,255,0.7)", backdropFilter: "blur(20px)", borderRight: "1px solid rgba(255,255,255,0.5)", padding: "20px 0" }}>
+        <div style={{ width: 220, flexShrink: 0, position: "fixed", top: 56, bottom: 0, left: 0, overflowY: "auto", background: "rgba(255,255,255,0.7)", backdropFilter: "blur(20px)", borderRight: "1px solid rgba(255,255,255,0.5)", padding: "20px 0" }}>
           {SECTIONS.map(section => (
             <div key={section.id}>
               <div onClick={() => { if (section.children.length) { toggle(section.id); } else { setActive(section.id); } }}
