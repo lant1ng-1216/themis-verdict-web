@@ -4,7 +4,7 @@ import { SiteNav } from "../page";
 import { useUser, SignInButton } from "@clerk/nextjs";
 
 const M = "JetBrains Mono, monospace";
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_AGENT_API || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 type VerdictStatus = "ACTIVE" | "VERIFIED" | "INVALIDATED";
 type Direction = "BULLISH" | "BEARISH";
@@ -23,6 +23,8 @@ interface Post {
   text?: string; likes?: number; liked?: boolean;
   linkedVerdictId?: string;
   timestamp: number; comments: Comment[];
+  // on-chain fields
+  txHash?: string; bscscanUrl?: string; chainNetwork?: string; chainResolved?: boolean; chainOutcome?: string;
 }
 
 // ── Avatar helpers ────────────────────────────────────────────────────────────
@@ -289,6 +291,13 @@ function VerdictPost({ post, expanded, onToggle, onBet, onComment, isSignedIn, l
               <span style={{fontFamily:M,fontSize:10,fontWeight:700,color:st.color,background:st.bg,padding:"3px 9px",borderRadius:5}}>
                 {t(st.en,st.zh)}
               </span>
+              {post.txHash && (
+                <a href={post.bscscanUrl} target="_blank" rel="noopener noreferrer"
+                  onClick={e=>e.stopPropagation()}
+                  style={{fontFamily:M,fontSize:8,fontWeight:800,color:"#f59e0b",background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.25)",padding:"2px 7px",borderRadius:4,letterSpacing:"0.1em",textDecoration:"none",display:"flex",alignItems:"center",gap:3}}>
+                  ⬡ {t("ON-CHAIN","链上验证")}
+                </a>
+              )}
               {post.pnl!==undefined&&
                 <span style={{fontFamily:M,fontSize:12,fontWeight:800,color:post.pnl>=0?"#059669":"#dc2626",marginLeft:"auto"}}>{post.pnl>=0?"+":""}{post.pnl}%</span>}
             </div>
@@ -652,36 +661,64 @@ export default function FeedPage() {
   const [filterDir, setFilterDir] = useState("ALL");
   const [betaModal, setBetaModal] = useState(true);
 
-  const fetchTrades = useCallback(async()=>{
+  const fetchVerdicts = useCallback(async()=>{
     try {
-      const res = await fetch(`${API}/api/agent/trades?limit=5`);
-      if (!res.ok) return;
+      // Fetch real verdicts from public feed endpoint (no API key needed)
+      const res = await fetch(`${API}/api/accuracy/feed?limit=20`);
+      if (!res.ok) throw new Error("verdict history unavailable");
       const data = await res.json();
-      if (!data.trades?.length) return;
-      const live: Post[] = data.trades.slice(0,2).map((tr: any, i: number)=>({
-        id:`live-${tr.order_id||i}`, type:"verdict" as const,
-        symbol:(tr.symbol||"BTC/USDT").replace("USDT","/USDT"),
-        direction:(tr.side==="BUY"?"BULLISH":"BEARISH") as Direction,
-        confidence:60+Math.floor(Math.abs(Math.sin(i*7))*30),
-        entry:parseFloat(tr.price||0),
-        target1:parseFloat(tr.price||0)*(tr.side==="BUY"?1.05:0.95),
-        stoploss:parseFloat(tr.price||0)*(tr.side==="BUY"?0.97:1.03),
-        regime:tr.side==="BUY"?"BULL_TREND":"BEAR_TREND",
-        status:(tr.pnl!=null?(parseFloat(tr.pnl)>=0?"VERIFIED":"INVALIDATED"):"ACTIVE") as VerdictStatus,
-        timestamp:tr.timestamp?new Date(tr.timestamp).getTime():Date.now()-i*60000*15,
-        invalidation:["Price invalidates setup on D1 close"],
-        dimensions:DIMS,
-        betFor:50+Math.floor(Math.sin(i*3)*20),
-        betAgainst:50-Math.floor(Math.sin(i*3)*20),
-        betCount:20+i*7,
-        pnl:tr.pnl!=null?parseFloat(tr.pnl):undefined,
-        comments:[],
-      }));
-      setPosts(prev=>{ const ids=new Set(prev.map(x=>x.id)); return [...live.filter(x=>!ids.has(x.id)),...prev].slice(0,60); });
-    } catch { /**/ }
+      const verdicts: any[] = data.verdicts || data || [];
+      if (!verdicts.length) return;
+
+      const live: Post[] = verdicts.map((v: any, i: number) => {
+        const dir = (v.conclusion || v.direction || "HOLD").toUpperCase();
+        const mapped: Direction = dir === "SHORT" || dir === "BEARISH" ? "BEARISH" : dir === "LONG" || dir === "BULLISH" ? "BULLISH" : "BULLISH";
+        const status: VerdictStatus = v.outcome === "hit" ? "VERIFIED" : v.outcome === "miss" ? "INVALIDATED" : "ACTIVE";
+        return {
+          id: v.verdict_id || `v-${i}`,
+          type: "verdict" as const,
+          symbol: (v.symbol || "BTC").replace("/USDT","") + "/USDT",
+          direction: mapped,
+          confidence: v.confidence || 0,
+          entry: v.entry_price || v.price || 0,
+          target1: v.target1 || 0,
+          target2: v.target2 || 0,
+          stoploss: v.stop_loss || v.stoploss || 0,
+          regime: v.market_regime || v.regime || "",
+          status,
+          pnl: v.pnl,
+          invalidation: v.invalidation_conditions || [],
+          dimensions: (v.dimensions || []).map((d: any) => ({
+            name: d.name || d.dimension,
+            signal: (d.signal || "neutral").toLowerCase(),
+            weight: d.weight || d.score || 0.5,
+            note: d.note || d.reason || "",
+          })),
+          betFor: 50 + Math.floor(Math.sin(i * 3) * 20),
+          betAgainst: 50 - Math.floor(Math.sin(i * 3) * 20),
+          betCount: 0,
+          timestamp: v.timestamp ? new Date(v.timestamp).getTime() : Date.now() - i * 60000 * 30,
+          comments: [],
+          // on-chain
+          txHash: v.tx_hash || undefined,
+          bscscanUrl: v.tx_hash ? `https://testnet.bscscan.com/tx/${v.tx_hash}` : undefined,
+          chainNetwork: v.chain_network || undefined,
+          chainResolved: v.chain_resolved || false,
+          chainOutcome: v.chain_outcome || undefined,
+        };
+      });
+
+      setPosts(prev => {
+        const ids = new Set(prev.filter(x => x.type === "user").map(x => x.id));
+        const userPosts = prev.filter(x => x.type === "user");
+        return [...live, ...userPosts.filter(x => !ids.has(x.id))].slice(0, 60);
+      });
+    } catch {
+      // Fallback: keep INITIAL mock data silently
+    }
   },[]);
 
-  useEffect(()=>{ fetchTrades(); const id=setInterval(fetchTrades,30000); return()=>clearInterval(id); },[fetchTrades]);
+  useEffect(()=>{ fetchVerdicts(); const id=setInterval(fetchVerdicts,60000); return()=>clearInterval(id); },[fetchVerdicts]);
 
   function addPost(p: Post) { setPosts(prev=>[p,...prev]); }
 
