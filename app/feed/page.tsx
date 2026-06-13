@@ -562,8 +562,22 @@ function RightPanel({ posts, lang }: { posts: Post[]; lang: string }) {
   const verdicts = posts.filter(p=>p.type==="verdict");
   const active   = verdicts.filter(p=>p.status==="ACTIVE");
   const verified = verdicts.filter(p=>p.status==="VERIFIED");
-  const accuracy = verdicts.filter(p=>p.status!=="ACTIVE").length
-    ? Math.round(verified.length/verdicts.filter(p=>p.status!=="ACTIVE").length*100) : 0;
+
+  const [stats, setStats] = useState<{total:number;correct:number;rate:number|null;call_count:number}|null>(null);
+  useEffect(()=>{
+    fetch(`${API}/api/accuracy/stats`).then(r=>r.json()).then(d=>{
+      setStats({
+        total: d.overall?.total ?? 0,
+        correct: d.overall?.correct ?? 0,
+        rate: d.overall?.rate ?? null,
+        call_count: d.call_count ?? 0,
+      });
+    }).catch(()=>{});
+  },[]);
+
+  const accuracy = stats?.rate ?? (verdicts.filter(p=>p.status!=="ACTIVE").length
+    ? Math.round(verified.length/verdicts.filter(p=>p.status!=="ACTIVE").length*100) : 0);
+  const totalCount = stats?.call_count ?? verdicts.length;
 
   const topStakers = [
     {name:"quant_alpha",initials:"QA",color:"#0047cc",count:24,pnl:"+12.4%"},
@@ -582,10 +596,10 @@ function RightPanel({ posts, lang }: { posts: Post[]; lang: string }) {
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr"}}>
           {[
-            {l:t("Verdicts","裁决数"), v:verdicts.length, c:"#0a1a3a"},
+            {l:t("Total","总裁决"),    v:totalCount,      c:"#0a1a3a"},
             {l:t("Active","进行中"),   v:active.length,   c:"#0047cc"},
-            {l:t("Verified","已验证"), v:verified.length, c:"#059669"},
-            {l:t("Accuracy","准确率"), v:`${accuracy}%`,  c:accuracy>=60?"#059669":"#f59e0b"},
+            {l:t("Verified","已验证"), v:stats?.correct ?? verified.length, c:"#059669"},
+            {l:t("Accuracy","准确率"), v:accuracy!=null?`${accuracy}%`:"—",  c:Number(accuracy)>=60?"#059669":"#f59e0b"},
           ].map(({l,v,c},i)=>(
             <div key={l} style={{padding:"14px 16px",borderRight:i%2===0?"1px solid #f0f2f6":"none",borderBottom:i<2?"1px solid #f0f2f6":"none"}}>
               <div style={{fontFamily:M,fontSize:8,color:"#94a3b8",letterSpacing:"0.1em",marginBottom:5}}>{l.toUpperCase()}</div>
@@ -764,28 +778,6 @@ export default function FeedPage() {
   return (
     <div style={{minHeight:"100vh",background:"#f4f6f9",fontFamily:M}}>
       <SiteNav lang={lang} onLangChange={handleLang}/>
-
-      {/* Coming soon overlay — blocks all interaction */}
-      <div style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(4,14,40,0.72)", backdropFilter:"blur(6px)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-        <div style={{ background:"#fff", borderRadius:20, padding:"48px 40px", width:420, maxWidth:"90vw", textAlign:"center", boxShadow:"0 32px 80px rgba(0,20,80,0.22)" }}>
-          <div style={{ width:64, height:64, borderRadius:16, background:"#f0f4ff", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px" }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0047cc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-          </div>
-          <div style={{ fontSize:18, fontWeight:700, color:"#0a1a3a", marginBottom:10, letterSpacing:"0.02em" }}>
-            {lang==="zh" ? "裁决广播即将上线" : "Verdict Feed Coming Soon"}
-          </div>
-          <div style={{ fontSize:13, color:"#64748b", lineHeight:1.7, marginBottom:28 }}>
-            {lang==="zh"
-              ? "该功能正在开发中，敬请期待。\n我们将在近期正式开放。"
-              : "This feature is under active development.\nStay tuned for the official launch."}
-          </div>
-          <a href="/dashboard" style={{ display:"inline-block", background:"#0047cc", color:"#fff", borderRadius:10, padding:"10px 28px", fontSize:13, fontWeight:600, textDecoration:"none", letterSpacing:"0.04em" }}>
-            {lang==="zh" ? "返回控制台" : "Back to Dashboard"}
-          </a>
-        </div>
-      </div>
 
       {/* Beta notice modal */}
       {betaModal && (
