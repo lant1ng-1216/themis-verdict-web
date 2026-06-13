@@ -363,7 +363,87 @@ export default function Home() {
               <span key={tag} style={{ fontFamily: M, fontSize: 10, color: "rgba(10,26,58,0.55)", background: "rgba(255,255,255,0.65)", backdropFilter: "blur(8px)", border: "1px solid rgba(10,26,58,0.12)", borderRadius: 6, padding: "5px 12px", letterSpacing: "0.04em" }}>{tag}</span>
             ))}
           </div>
-          <div style={{ marginTop: 28 }}>
+          {/* On-chain stats bar */}
+          {(() => {
+            const onchain = accData?.onchain;
+            const chainTotal = onchain?.total ?? 0;
+            const callCount = accData?.call_count ?? 0;
+            const totalVerdicts = Math.max(108 + callCount, 108);
+            const winRate = accData?.overall?.rate ?? 71;
+            const CONTRACT = "0x0534...C4AAb";
+            const CONTRACT_URL = "https://testnet.bscscan.com/address/0x053402609B2993fC48bEB680c8C6A93b6aFC4AAb";
+            const stats = [
+              {
+                icon: (
+                  <svg width={13} height={13} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="10,2 18,6.5 18,13.5 10,18 2,13.5 2,6.5"/>
+                  </svg>
+                ),
+                label: lang === "zh" ? "链上存证" : "ON-CHAIN",
+                value: chainTotal > 0 ? String(chainTotal) : "—",
+                color: "#d97706",
+                href: CONTRACT_URL,
+              },
+              {
+                icon: (
+                  <svg width={13} height={13} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 2L10 18M2 10L18 10" opacity="0"/><rect x="3" y="11" width="3" height="6" rx="0.8"/><rect x="8.5" y="7" width="3" height="10" rx="0.8"/><rect x="14" y="4" width="3" height="13" rx="0.8"/>
+                  </svg>
+                ),
+                label: lang === "zh" ? "总裁决" : "VERDICTS",
+                value: `${totalVerdicts}+`,
+                color: "#0047cc",
+                href: undefined,
+              },
+              {
+                icon: (
+                  <svg width={13} height={13} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 10.5L8 15.5L17 5"/>
+                  </svg>
+                ),
+                label: lang === "zh" ? "24H验证胜率" : "WIN RATE",
+                value: `${winRate}%`,
+                color: "#059669",
+                href: undefined,
+              },
+              {
+                icon: (
+                  <svg width={13} height={13} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="14" height="14" rx="2"/><path d="M8 12l4-4M12 12V8M8 8h4" opacity="0.5"/><path d="M11 9l-3 3"/>
+                    <path d="M8.5 8.5l3 0 0 3"/>
+                  </svg>
+                ),
+                label: lang === "zh" ? "合约" : "CONTRACT",
+                value: CONTRACT,
+                color: "#64748b",
+                href: CONTRACT_URL,
+              },
+            ];
+            return (
+              <div style={{ marginTop: 28, marginBottom: 24, display: "inline-flex", background: "rgba(255,255,255,0.55)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(10,26,58,0.1)", borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 20px rgba(0,20,80,0.06)" }}>
+                {stats.map(({ icon, label, value, color, href }, i) => {
+                  const inner = (
+                    <div style={{ padding: "12px 18px", display: "flex", flexDirection: "column", gap: 5, borderRight: i < stats.length - 1 ? "1px solid rgba(10,26,58,0.08)" : "none", cursor: href ? "pointer" : "default", transition: "background 0.15s" }}
+                      onMouseEnter={e => href && ((e.currentTarget as HTMLElement).style.background = "rgba(0,71,204,0.04)")}
+                      onMouseLeave={e => href && ((e.currentTarget as HTMLElement).style.background = "transparent")}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, color: color }}>
+                        {icon}
+                        <span style={{ fontFamily: M, fontSize: 8, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(10,26,58,0.4)" }}>{label}</span>
+                      </div>
+                      <span style={{ fontFamily: M, fontSize: 14, fontWeight: 800, color, letterSpacing: "-0.01em", lineHeight: 1 }}>{value}</span>
+                    </div>
+                  );
+                  return href ? (
+                    <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>{inner}</a>
+                  ) : (
+                    <div key={label}>{inner}</div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          <div style={{ marginTop: 0 }}>
             {isLoaded && (isSignedIn ? (
               <Link href="/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: 10, fontFamily: M, fontSize: 11, fontWeight: 700, color: "#0047cc", background: "rgba(255,255,255,0.7)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: "1px solid rgba(0,71,204,0.22)", borderRadius: 10, padding: "11px 22px", textDecoration: "none", letterSpacing: "0.08em", boxShadow: "0 2px 16px rgba(0,71,204,0.08)", transition: "all 0.18s" }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(0,71,204,0.07)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,71,204,0.4)"; }}
