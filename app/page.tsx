@@ -374,7 +374,11 @@ export default function Home() {
               {
                 icon: (
                   <svg width={13} height={13} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="10,2 18,6.5 18,13.5 10,18 2,13.5 2,6.5"/>
+                    <circle cx="4" cy="10" r="2.2"/>
+                    <circle cx="16" cy="4" r="2.2"/>
+                    <circle cx="16" cy="16" r="2.2"/>
+                    <line x1="6.1" y1="9.1" x2="13.9" y2="4.9"/>
+                    <line x1="6.1" y1="10.9" x2="13.9" y2="15.1"/>
                   </svg>
                 ),
                 label: lang === "zh" ? "链上存证" : "ON-CHAIN",
@@ -531,13 +535,6 @@ export default function Home() {
               <span style={{ fontFamily: M, fontSize: 13, fontWeight: 800, color: "#0a1a3a" }}>{totalCount}+</span>
             </div>
             {sep}
-            {(accData?.onchain?.total ?? 0) > 0 && <>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                <span style={{ fontFamily: M, fontSize: 9, color: "#f59e0b", letterSpacing: "0.14em" }}>⬡ {lang === "zh" ? "链上存证" : "ON-CHAIN"}</span>
-                <span style={{ fontFamily: M, fontSize: 13, fontWeight: 800, color: "#f59e0b" }}>{accData!.onchain!.total}</span>
-              </div>
-              {sep}
-            </>}
             <span style={{ fontFamily: M, fontSize: 8.5, color: "rgba(10,26,58,0.3)", letterSpacing: "0.12em", flexShrink: 0 }}>
               {lang === "zh" ? "裁决发出 24H 后对比市价验证 · BSC 链上存证" : "ACCURACY VERIFIED 24H POST-ISSUE · RECORDED ON BSC"}
             </span>
