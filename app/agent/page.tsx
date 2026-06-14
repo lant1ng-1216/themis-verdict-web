@@ -2702,17 +2702,21 @@ export default function AgentPage() {
         </div>
 
         {/* 非对话页面面板 */}
-        {activeNav === "positions" && <PositionsPanel lang={lang} onCloseNav={(sym, tradeId) => {
-          setInput(lang === "zh" ? `平仓 ${sym}，trade_id: ${tradeId}` : `Close position ${sym}, trade_id: ${tradeId}`);
-          setActiveNav("chat");
-        }} />}
-        {activeNav === "history" && <TradesPanel lang={lang} />}
-        {activeNav === "evolution" && <EvolutionPanel lang={lang} />}
-        {activeNav === "symbols" && <SymbolsPanel lang={lang} />}
-        {activeNav === "risk" && <RiskPanel lang={lang} />}
-        {activeNav === "exchange" && <ExchangePanel status={status} lang={lang} />}
-        {activeNav === "skill" && <SkillPanel lang={lang} />}
-        {activeNav === "collab" && <CollabPanel lang={lang} userId={user?.id || ""} />}
+        {activeNav !== "chat" && (
+          <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+            {activeNav === "positions" && <PositionsPanel lang={lang} onCloseNav={(sym, tradeId) => {
+              setInput(lang === "zh" ? `平仓 ${sym}，trade_id: ${tradeId}` : `Close position ${sym}, trade_id: ${tradeId}`);
+              setActiveNav("chat");
+            }} />}
+            {activeNav === "history" && <TradesPanel lang={lang} />}
+            {activeNav === "evolution" && <EvolutionPanel lang={lang} />}
+            {activeNav === "symbols" && <SymbolsPanel lang={lang} />}
+            {activeNav === "risk" && <RiskPanel lang={lang} />}
+            {activeNav === "exchange" && <ExchangePanel status={status} lang={lang} />}
+            {activeNav === "skill" && <SkillPanel lang={lang} />}
+            {activeNav === "collab" && <CollabPanel lang={lang} userId={user?.id || ""} />}
+          </div>
+        )}
 
         {/* Messages */}
         <div ref={messagesContainerRef} onScroll={handleMessagesScroll} style={{ ...S.messages, display: activeNav === "chat" ? undefined : "none" }}>
