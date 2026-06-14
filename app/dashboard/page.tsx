@@ -2,6 +2,8 @@
 import { useUser, useClerk, UserButton } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useCommerceJob } from "../lib/useCommerceJob";
 
 const API_BASE = process.env.NEXT_PUBLIC_AGENT_API || "https://api.themisverdict.xyz";
 
@@ -1855,9 +1857,6 @@ export default function DashboardPage() {
 }
 
 // ── Commission Panel (ERC-8183 verdict委托) ─────────────────────────────────
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useCommerceJob } from "../lib/useCommerceJob";
-
 function CommissionPanel({ lang, userId }: { lang: string; userId: string }) {
   const t = (zh: string, en: string) => lang === "zh" ? zh : en;
   const M = "JetBrains Mono, monospace";
