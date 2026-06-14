@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { SiteNav } from "../../page";
 import { useUser } from "@clerk/nextjs";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ConnectButtonDynamic as ConnectButton } from "../../lib/ConnectButtonDynamic";
 import { useCommerceJob } from "../../lib/useCommerceJob";
 
 const M = "JetBrains Mono, monospace";

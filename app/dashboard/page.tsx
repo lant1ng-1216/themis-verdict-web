@@ -2,7 +2,7 @@
 import { useUser, useClerk, UserButton } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ConnectButtonDynamic as ConnectButton } from "../lib/ConnectButtonDynamic";
 import { useCommerceJob } from "../lib/useCommerceJob";
 
 const API_BASE = process.env.NEXT_PUBLIC_AGENT_API || "https://api.themisverdict.xyz";
