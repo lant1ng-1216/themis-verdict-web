@@ -2028,7 +2028,7 @@ function CollabPanel({ lang, userId }: { lang: string; userId: string }) {
   const stats = node?.stats || {};
 
   return (
-    <div style={{ padding: "24px", maxWidth: 680 }}>
+    <div style={{ padding: "24px", maxWidth: 680, height: "calc(100vh - 52px)", overflowY: "auto", boxSizing: "border-box" as const }}>
       {/* 主开关 */}
       <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", padding: "22px 24px", marginBottom: 16, boxShadow: "0 1px 4px rgba(0,20,80,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
