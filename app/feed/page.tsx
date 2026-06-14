@@ -489,9 +489,7 @@ function VerdictPost({ post, expanded, onToggle, onStake, onClaim, onComment, is
     <article style={{ borderBottom: "1px solid #f0f2f6", padding: "16px 16px" }}>
       <div style={{ display: "flex", gap: 12 }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#0a1a3a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <span style={{ fontSize: 18, lineHeight: 1 }}>⚖</span>
-          </div>
+          <img src="/themis-logo.png" alt="Themis" style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1.5px solid rgba(0,71,204,0.15)" }} />
           {(expanded || showComments) && post.comments.length > 0 &&
             <div style={{ width: 2, flex: 1, background: "#f0f2f6", marginTop: 6, borderRadius: 1 }} />}
         </div>

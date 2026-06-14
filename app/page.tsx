@@ -325,6 +325,19 @@ export default function Home() {
     return () => clearInterval(id);
   }, []);
 
+  const tagsRef = useRef<HTMLDivElement>(null);
+  const [tagsWidth, setTagsWidth] = useState<number>(0);
+  useEffect(() => {
+    const el = tagsRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      setTagsWidth(entries[0].contentRect.width);
+    });
+    ro.observe(el);
+    setTagsWidth(el.offsetWidth);
+    return () => ro.disconnect();
+  }, []);
+
   return (
     <main style={{ minHeight: "100vh", fontFamily: M, overflowX: "hidden" }}>
       <video autoPlay muted loop playsInline style={{ position: "fixed", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}>
@@ -353,7 +366,7 @@ export default function Home() {
               ? <>基于司法框架的 AI Agent。审查 <strong style={{ color: "#0a1a3a" }}>7个市场维度</strong>，分类市场状态，并出具<strong style={{ color: "#0a1a3a" }}>结构化、可证伪的裁决</strong> — 由 CoinMarketCap 实时数据驱动。</>
               : <>A judicial-framework AI agent. Examines <strong style={{ color: "#0a1a3a" }}>7 market dimensions</strong>, classifies regimes, and delivers <strong style={{ color: "#0a1a3a" }}>structured, falsifiable verdicts</strong> — powered by CoinMarketCap real-time data.</>}
           </p>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div ref={tagsRef} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {(lang === "zh"
               ? ["三庭框架", "5种市场状态", "自我校准", "宏观事件", "多资产"]
               : ["Three-Court Framework", "5 Market Regimes", "Self-Calibrating", "Macro Events", "Multi-Asset"]
@@ -445,9 +458,9 @@ export default function Home() {
             );
           })()}
 
-          <div style={{ marginTop: 0 }}>
+          <div style={{ marginTop: 0, width: tagsWidth || "auto" }}>
             {isLoaded && (isSignedIn ? (
-              <Link href="/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: 10, fontFamily: M, fontSize: 11, fontWeight: 700, color: "#0047cc", background: "rgba(255,255,255,0.7)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: "1px solid rgba(0,71,204,0.22)", borderRadius: 10, padding: "11px 22px", textDecoration: "none", letterSpacing: "0.08em", boxShadow: "0 2px 16px rgba(0,71,204,0.08)", transition: "all 0.18s" }}
+              <Link href="/dashboard" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, fontFamily: M, fontSize: 11, fontWeight: 700, color: "#0047cc", background: "rgba(255,255,255,0.7)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: "1px solid rgba(0,71,204,0.22)", borderRadius: 10, padding: "11px 22px", textDecoration: "none", letterSpacing: "0.08em", boxShadow: "0 2px 16px rgba(0,71,204,0.08)", transition: "all 0.18s" }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(0,71,204,0.07)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,71,204,0.4)"; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.7)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,71,204,0.22)"; }}>
                 <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="#0047cc" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -458,7 +471,7 @@ export default function Home() {
               </Link>
             ) : (
               <SignInButton mode="modal">
-                <button style={{ display: "inline-flex", alignItems: "center", gap: 10, fontFamily: M, fontSize: 11, fontWeight: 700, color: "#0047cc", background: "rgba(255,255,255,0.7)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: "1px solid rgba(0,71,204,0.22)", borderRadius: 10, padding: "11px 22px", cursor: "pointer", letterSpacing: "0.08em", boxShadow: "0 2px 16px rgba(0,71,204,0.08)" }}>
+                <button style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "center", gap: 10, fontFamily: M, fontSize: 11, fontWeight: 700, color: "#0047cc", background: "rgba(255,255,255,0.7)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: "1px solid rgba(0,71,204,0.22)", borderRadius: 10, padding: "11px 22px", cursor: "pointer", letterSpacing: "0.08em", boxShadow: "0 2px 16px rgba(0,71,204,0.08)", boxSizing: "border-box" }}>
                   <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="#0047cc" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>
                   </svg>
