@@ -1868,6 +1868,8 @@ function CommissionPanel({ lang, userId }: { lang: string; userId: string }) {
   const [loadingJobs, setLoadingJobs] = useState(false);
 
   const commerce = useCommerceJob();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const stepLabel: Record<string, [string, string]> = {
     idle: ["", ""],
@@ -1923,15 +1925,19 @@ function CommissionPanel({ lang, userId }: { lang: string; userId: string }) {
       {/* Wallet connect bar */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0", padding: "12px 16px", marginBottom: 18 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: commerce.isConnected ? "#10b981" : "#94a3b8", boxShadow: commerce.isConnected ? "0 0 6px #10b981" : "none" }} />
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: mounted && commerce.isConnected ? "#10b981" : "#94a3b8", boxShadow: mounted && commerce.isConnected ? "0 0 6px #10b981" : "none" }} />
           <div style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "#0a1a3a", letterSpacing: "0.08em" }}>
-            {commerce.isConnected ? t("钱包已连接", "WALLET CONNECTED") : t("请连接钱包以开始委托", "CONNECT WALLET TO COMMISSION")}
+            {mounted && commerce.isConnected ? t("钱包已连接", "WALLET CONNECTED") : t("请连接钱包以开始委托", "CONNECT WALLET TO COMMISSION")}
           </div>
-          {commerce.address && (
+          {mounted && commerce.address && (
             <span style={{ fontFamily: M, fontSize: 9, color: "#64748b" }}>{commerce.address.slice(0,6)}…{commerce.address.slice(-4)}</span>
           )}
         </div>
-        <ConnectButton chainStatus="icon" showBalance={false} accountStatus="address" />
+        {mounted ? (
+          <ConnectButton chainStatus="icon" showBalance={false} accountStatus="address" />
+        ) : (
+          <div style={{ fontFamily: M, fontSize: 10, color: "#94a3b8" }}>Loading…</div>
+        )}
       </div>
 
       <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", padding: 28, marginBottom: 24, boxShadow: "0 1px 4px rgba(0,20,80,0.04)" }}>

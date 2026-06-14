@@ -53,6 +53,8 @@ export default function SkillDetailPage() {
 
   // ERC-8183 paid call (user wallet flow)
   const commerce = useCommerceJob();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [paidSymbol,  setPaidSymbol]  = useState("BTC");
   const [paidQuestion,setPaidQuestion]= useState("");
   const paidRunning = ["switching_chain","preparing","approving","creating_job","funding","executing"].includes(commerce.step);
@@ -447,11 +449,15 @@ export default function SkillDetailPage() {
                 {/* Wallet connect compact */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, padding: "6px 10px", background: "rgba(255,255,255,0.4)", borderRadius: 6 }}>
                   <span style={{ fontFamily: M, fontSize: 9, color: "#78350f" }}>
-                    {commerce.isConnected
+                    {mounted && commerce.isConnected
                       ? `${commerce.address!.slice(0,6)}…${commerce.address!.slice(-4)}`
                       : t("钱包未连接", "Wallet disconnected")}
                   </span>
-                  <ConnectButton chainStatus="none" showBalance={false} accountStatus="address" />
+                  {mounted ? (
+                    <ConnectButton chainStatus="none" showBalance={false} accountStatus="address" />
+                  ) : (
+                    <span style={{ fontFamily: M, fontSize: 9, color: "#94a3b8" }}>…</span>
+                  )}
                 </div>
 
                 <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
