@@ -114,6 +114,7 @@ export default function CollabPage() {
   const [myTokens,      setMyTokens]      = useState(0);
   const [collabDone,    setCollabDone]    = useState(false);
   const [priceAlerts,   setPriceAlerts]   = useState<{symbol:string;message:string;at:string}[]>([]);
+  const [myNodeData,    setMyNodeData]    = useState<CollabNode|null>(null);
 
   // Fetch pending price-alert notifications on load
   useEffect(() => {
@@ -125,11 +126,21 @@ export default function CollabPage() {
       .catch(()=>{});
   }, [user?.id]);
 
+  // Fetch my node status
+  useEffect(() => {
+    const uid = user?.id;
+    if (!uid) return;
+    fetch(`${AGENT_API}/api/collab/node/status?user_id=${encodeURIComponent(uid)}`)
+      .then(r=>r.json())
+      .then(d => setMyNodeData(d))
+      .catch(()=>{});
+  }, [user?.id]);
+
   // Place nodes on grid intersections
   useEffect(() => {
     fetch(`${AGENT_API}/api/collab/pool?limit=100`)
-      .then(r=>r.json()).then(d=>place(d.nodes?.length?d.nodes:DEMO_NODES))
-      .catch(()=>place(DEMO_NODES));
+      .then(r=>r.json()).then(d=>place(d.nodes?.length?d.nodes:[]))
+      .catch(()=>place([]));
   }, []);
 
   function hashId(id: string): number {
@@ -447,11 +458,11 @@ export default function CollabPage() {
     if(!collabNode||!question.trim()) return;
     setCollabStarted(true);setMyText("");setTheirText("");setCollabDone(false);setMyTokens(0);
 
-    const myNodeData = {
+    const resolvedMyNode = myNodeData || {
       user_id: user?.id||"me",
-      specializations:["BTC","ETH"], skills:["核心策略引擎"],
-      mode:"public", evolution_level:2, strategy_bias:"technical",
-      risk_preference:"moderate", stats:{requests_total:12,requests_today:1,accuracy_rate:0.74},
+      specializations:[], skills:[],
+      mode:"public", evolution_level:1, strategy_bias:"technical",
+      risk_preference:"moderate", stats:{requests_total:0,requests_today:0,accuracy_rate:0},
     };
 
     const body = {
@@ -459,7 +470,7 @@ export default function CollabPage() {
       peer_user_id: collabNode.user_id,
       question,
       lang,
-      my_node: myNodeData,
+      my_node: resolvedMyNode,
       peer_node: collabNode,
     };
 
@@ -575,7 +586,7 @@ export default function CollabPage() {
       {/* Collab drawer */}
       {collabActive&&collabNode&&(
         <CollabDrawer
-          myNode={{user_id:user?.id||"me",specializations:["BTC","ETH"],skills:["核心策略引擎"],mode:"public",evolution_level:2,strategy_bias:"technical",risk_preference:"moderate",stats:{requests_total:12,requests_today:1,accuracy_rate:0.74},avatar_url:user?.imageUrl}}
+          myNode={myNodeData || {user_id:user?.id||"me",specializations:[],skills:[],mode:"public",evolution_level:1,strategy_bias:"technical",risk_preference:"moderate",stats:{requests_total:0,requests_today:0,accuracy_rate:0},avatar_url:user?.imageUrl}}
           theirNode={collabNode}
           question={collabQuestion} onQuestionChange={setCollabQuestion}
           onRun={runCollab} onClose={()=>{setCollabActive(false);setCollabStarted(false);}}

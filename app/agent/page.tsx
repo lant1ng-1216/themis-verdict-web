@@ -1935,7 +1935,10 @@ function CollabPanel({ lang, userId }: { lang: string; userId: string }) {
   const [mode, setMode] = useState("public");
   const [whitelist, setWhitelist] = useState("");
   const [specializations, setSpecializations] = useState<string[]>([]);
+  const [strategyBias, setStrategyBias] = useState("technical");
+  const [riskPreference, setRiskPreference] = useState("moderate");
   const [msg, setMsg] = useState("");
+  const [deployedSkillId, setDeployedSkillId] = useState<string>("");
 
   const PAIRS = ["BTC", "ETH", "BNB", "SOL", "DOGE", "XRP"];
 
@@ -1944,13 +1947,17 @@ function CollabPanel({ lang, userId }: { lang: string; userId: string }) {
     Promise.all([
       fetch(`${AGENT_API}/api/collab/node/status?user_id=${userId}`).then(r => r.json()),
       fetch(`${AGENT_API}/api/collab/pool`).then(r => r.json()),
-    ]).then(([nodeData, poolData]) => {
+      fetch(`${AGENT_API}/api/skills/agent/current?user_id=${userId}`).then(r => r.json()).catch(() => ({})),
+    ]).then(([nodeData, poolData, skillData]) => {
       setNode(nodeData);
       if (nodeData.enabled) {
         setMode(nodeData.mode || "public");
         setSpecializations(nodeData.specializations || []);
         setWhitelist((nodeData.whitelist || []).join(", "));
+        setStrategyBias(nodeData.strategy_bias || "technical");
+        setRiskPreference(nodeData.risk_preference || "moderate");
       }
+      if (skillData?.skill_id) setDeployedSkillId(skillData.skill_id);
       setPool(poolData.nodes || []);
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -1965,7 +1972,9 @@ function CollabPanel({ lang, userId }: { lang: string; userId: string }) {
           body: JSON.stringify({
             user_id: userId, mode, specializations,
             whitelist: whitelist.split(",").map(s => s.trim()).filter(Boolean),
-            skills: [],
+            skills: deployedSkillId ? [deployedSkillId] : [],
+            strategy_bias: strategyBias,
+            risk_preference: riskPreference,
           }),
         });
         const d = await res.json();
@@ -1990,6 +1999,8 @@ function CollabPanel({ lang, userId }: { lang: string; userId: string }) {
         body: JSON.stringify({
           user_id: userId, mode, specializations,
           whitelist: whitelist.split(",").map(s => s.trim()).filter(Boolean),
+          strategy_bias: strategyBias,
+          risk_preference: riskPreference,
         }),
       });
       setMsg(t("✓ 设置已保存", "✓ Settings saved"));
@@ -2087,13 +2098,47 @@ function CollabPanel({ lang, userId }: { lang: string; userId: string }) {
           )}
 
           {/* 专注方向 */}
-          <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: 18 }}>
             <label style={labelStyle}>{t("我的专注方向", "MY SPECIALIZATIONS")}</label>
             <div style={{ display: "flex", gap: 7, flexWrap: "wrap" as const }}>
               {PAIRS.map(p => (
                 <button key={p} onClick={() => setSpecializations(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])}
                   style={{ fontFamily: M, fontSize: 10, fontWeight: specializations.includes(p) ? 700 : 400, color: specializations.includes(p) ? "#0047cc" : "#64748b", background: specializations.includes(p) ? "#eef2ff" : "#f8fafc", border: `1px solid ${specializations.includes(p) ? "#0047cc" : "#e2e8f0"}`, borderRadius: 7, padding: "6px 14px", cursor: "pointer" }}>
                   {p}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 分析风格 */}
+          <div style={{ marginBottom: 18 }}>
+            <label style={labelStyle}>{t("分析风格", "ANALYSIS STYLE")}</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[
+                { v: "technical", zh: "技术面", en: "Technical" },
+                { v: "onchain",   zh: "链上数据", en: "On-chain" },
+                { v: "macro",     zh: "宏观策略", en: "Macro" },
+              ].map(opt => (
+                <button key={opt.v} onClick={() => setStrategyBias(opt.v)}
+                  style={{ flex: 1, padding: "9px 8px", borderRadius: 9, border: `1px solid ${strategyBias === opt.v ? "#0047cc" : "#e2e8f0"}`, background: strategyBias === opt.v ? "#eef2ff" : "#fff", cursor: "pointer", fontFamily: M, fontSize: 10, fontWeight: strategyBias === opt.v ? 700 : 400, color: strategyBias === opt.v ? "#0047cc" : "#64748b" }}>
+                  {lang === "zh" ? opt.zh : opt.en}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 风险偏好 */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={labelStyle}>{t("风险偏好", "RISK PREFERENCE")}</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[
+                { v: "conservative", zh: "保守型", en: "Conservative" },
+                { v: "moderate",     zh: "稳健型", en: "Moderate" },
+                { v: "aggressive",   zh: "激进型", en: "Aggressive" },
+              ].map(opt => (
+                <button key={opt.v} onClick={() => setRiskPreference(opt.v)}
+                  style={{ flex: 1, padding: "9px 8px", borderRadius: 9, border: `1px solid ${riskPreference === opt.v ? "#0047cc" : "#e2e8f0"}`, background: riskPreference === opt.v ? "#eef2ff" : "#fff", cursor: "pointer", fontFamily: M, fontSize: 10, fontWeight: riskPreference === opt.v ? 700 : 400, color: riskPreference === opt.v ? "#0047cc" : "#64748b" }}>
+                  {lang === "zh" ? opt.zh : opt.en}
                 </button>
               ))}
             </div>
