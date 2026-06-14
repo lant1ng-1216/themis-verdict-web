@@ -149,7 +149,7 @@ export default function CollabPage() {
     if (!uid) return;
     fetch(`${AGENT_API}/api/collab/node/status?user_id=${encodeURIComponent(uid)}`)
       .then(r=>r.json())
-      .then(d => setMyNodeData(d))
+      .then(d => { if(d?.enabled && d?.user_id) setMyNodeData(d); })
       .catch(()=>{});
   }, [user?.id]);
 
@@ -967,7 +967,7 @@ const AgentPanel=React.forwardRef<HTMLDivElement,{node:CollabNode;label:string;c
       setVisibleBoot([]); setBootDone(false);
       let i=0;
       const interval=setInterval(()=>{
-        if(i<bootLines.length){ setVisibleBoot(p=>[...p,bootLines[i]]); i++; }
+        if(i<bootLines.length){ const ln=bootLines[i]; if(ln!=null) setVisibleBoot(p=>[...p,ln]); i++; }
         else{ clearInterval(interval); setBootDone(true); }
       }, 180);
       return ()=>clearInterval(interval);
@@ -994,8 +994,8 @@ const AgentPanel=React.forwardRef<HTMLDivElement,{node:CollabNode;label:string;c
           </div>
           {/* Boot log */}
           <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
-            {started&&visibleBoot.map((line,i)=>(
-              <div key={i} style={{fontFamily:M,fontSize:8,lineHeight:1.8,color:line.startsWith("─")?`${color}40`:i===visibleBoot.length-1&&!bootDone?"rgba(255,255,255,0.6)":"rgba(255,255,255,0.25)",letterSpacing:"0.05em",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+            {started&&visibleBoot.filter(l=>l!=null).map((line,i)=>(
+              <div key={i} style={{fontFamily:M,fontSize:8,lineHeight:1.8,color:(line||"").startsWith("─")?`${color}40`:i===visibleBoot.length-1&&!bootDone?"rgba(255,255,255,0.6)":"rgba(255,255,255,0.25)",letterSpacing:"0.05em",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
                 {line}
               </div>
             ))}
