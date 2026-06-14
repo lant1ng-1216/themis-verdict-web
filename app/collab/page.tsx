@@ -16,7 +16,6 @@ interface CollabNode {
   strategy_bias?: string;
   risk_preference?: string;
   avatar_url?: string;
-  isReal?: boolean;
   stats?: { requests_total: number; requests_today: number; accuracy_rate?: number };
 }
 interface GridNode extends CollabNode {
@@ -140,7 +139,7 @@ export default function CollabPage() {
   // Place nodes on grid intersections
   useEffect(() => {
     fetch(`${AGENT_API}/api/collab/pool?limit=100`)
-      .then(r=>r.json()).then(d=>place((d.nodes||[]).map((n: CollabNode)=>({...n, isReal:true}))))
+      .then(r=>r.json()).then(d=>place(d.nodes||[]))
       .catch(()=>place([]));
   }, []);
 
@@ -354,48 +353,29 @@ export default function CollabPage() {
         }
       }
 
-      // ── Draw nodes ──
+      // ── Draw nodes — white glowing dots ──
       projected.forEach(({node,sx,sy,scale,depth})=>{
-        const depthNorm=(depth+R)/(2*R);   // 0=back, 1=front
-        if(depthNorm<0.15) return;         // skip far-back nodes
+        const depthNorm=(depth+R)/(2*R);
+        if(depthNorm<0.15) return;
 
-        const isReal = (node as CollabNode).isReal;
-        const dotR = (isReal ? 7 : 5.5) * scale;
+        const dotR = 5.5 * scale;
         const alpha = 0.4 + depthNorm * 0.6;
 
-        // Wide soft glow — blue for real nodes, white for demo
-        const glowR = dotR + (isReal ? 22 : 16) * depthNorm;
+        const glowR = dotR + 16 * depthNorm;
         const glow = ctx.createRadialGradient(sx,sy,dotR*0.2,sx,sy,glowR);
-        if(isReal){
-          glow.addColorStop(0, `rgba(80,160,255,${alpha*0.7})`);
-          glow.addColorStop(0.4, `rgba(60,120,255,${alpha*0.35})`);
-          glow.addColorStop(1, "transparent");
-        } else {
-          glow.addColorStop(0, `rgba(180,220,255,${alpha*0.5})`);
-          glow.addColorStop(0.4, `rgba(140,200,255,${alpha*0.2})`);
-          glow.addColorStop(1, "transparent");
-        }
+        glow.addColorStop(0, `rgba(180,220,255,${alpha*0.5})`);
+        glow.addColorStop(0.4, `rgba(140,200,255,${alpha*0.2})`);
+        glow.addColorStop(1, "transparent");
         ctx.beginPath(); ctx.arc(sx,sy,glowR,0,Math.PI*2);
         ctx.fillStyle=glow; ctx.fill();
 
-        // Core dot
         ctx.beginPath(); ctx.arc(sx,sy,dotR,0,Math.PI*2);
-        ctx.fillStyle = isReal ? `rgba(100,180,255,${alpha})` : `rgba(255,255,255,${alpha})`;
+        ctx.fillStyle=`rgba(255,255,255,${alpha})`;
         ctx.fill();
 
-        // Sharp inner highlight
         ctx.beginPath(); ctx.arc(sx-dotR*0.25,sy-dotR*0.25,dotR*0.35,0,Math.PI*2);
         ctx.fillStyle=`rgba(255,255,255,${alpha*0.6})`;
         ctx.fill();
-
-        // Pulsing ring for real nodes
-        if(isReal){
-          const pulse = 0.3 + 0.2 * Math.sin(Date.now()/600);
-          ctx.beginPath(); ctx.arc(sx,sy,dotR+3*scale,0,Math.PI*2);
-          ctx.strokeStyle=`rgba(100,180,255,${pulse})`;
-          ctx.lineWidth=1.2*scale;
-          ctx.stroke();
-        }
       });
 
       animRef.current=requestAnimationFrame(draw);
