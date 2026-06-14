@@ -12,6 +12,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <ClerkProvider>
       <html lang="en">
         <head>
+          {/* Prevent browser auto-translation — this site manages its own i18n */}
+          <meta name="google" content="notranslate" />
+          <meta httpEquiv="Content-Language" content="en,zh" />
           <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
         </head>
         <body>{children}</body>

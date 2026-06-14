@@ -28,7 +28,7 @@ const SYMBOL_COLORS: Record<string, string> = {
 
 export default function GraphPage() {
   const [tab, setTab] = useState<"graph" | "tree">("graph");
-  const [lang, setLang] = useState("en");
+  const [lang, setLang] = useState(() => typeof window !== "undefined" ? (localStorage.getItem("themis_lang") || "en") : "en");
   const [confirmed, setConfirmed] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [activeSymbols, setActiveSymbols] = useState<string[]>([]);

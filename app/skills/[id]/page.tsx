@@ -27,7 +27,7 @@ export default function SkillDetailPage() {
   const skillId = params.id as string;
   const { user } = useUser();
 
-  const [lang, setLang]         = useState("zh");
+  const [lang, setLang] = useState(() => typeof window !== "undefined" ? (localStorage.getItem("themis_lang") || "zh") : "zh");
   const [skill, setSkill]       = useState<any>(null);
   const [loading, setLoading]   = useState(true);
   const [owned, setOwned]       = useState(false);

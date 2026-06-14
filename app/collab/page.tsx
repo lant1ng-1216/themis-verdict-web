@@ -68,7 +68,7 @@ function stripMd(text: string): string {
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function CollabPage() {
   const { user } = useUser();
-  const [lang, setLang] = useState<"zh"|"en">("en");
+  const [lang, setLang] = useState<"zh"|"en">(() => (typeof window !== "undefined" ? (localStorage.getItem("themis_lang") as "zh"|"en") : null) || "en");
   const t = (zh:string,en:string) => lang==="zh"?zh:en;
 
   // Sync lang with main site via localStorage

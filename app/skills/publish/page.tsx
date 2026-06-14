@@ -10,7 +10,7 @@ const M = "JetBrains Mono, monospace";
 export default function PublishSkillPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
-  const [lang, setLang] = useState("zh");
+  const [lang, setLang] = useState(() => typeof window !== "undefined" ? (localStorage.getItem("themis_lang") || "zh") : "zh");
   const t = (en: string, zh: string) => lang === "zh" ? zh : en;
   const [isDev, setIsDev] = useState<boolean | null>(null);
   const [submitting, setSubmitting] = useState(false);

@@ -110,7 +110,7 @@ function SkillCard({ skill, lang, owned }: { skill: Skill; lang: string; owned: 
 
 export default function SkillsPage() {
   const { user } = useUser();
-  const [lang, setLang] = useState("zh");
+  const [lang, setLang] = useState(() => typeof window !== "undefined" ? (localStorage.getItem("themis_lang") || "zh") : "zh");
   const [skills, setSkills] = useState<Skill[]>([]);
   const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);

@@ -311,11 +311,9 @@ function GlobeViz() {
 // ── Home ──────────────────────────────────────────────────────────────────────
 export default function Home() {
   const { isSignedIn, isLoaded } = useUser();
-  const [lang, setLang] = useState<string>("en");
-  useEffect(() => {
-    const saved = localStorage.getItem("themis_lang");
-    if (saved) setLang(saved);
-  }, []);
+  const [lang, setLang] = useState<string>(() =>
+    typeof window !== "undefined" ? (localStorage.getItem("themis_lang") || "en") : "en"
+  );
   const handleLang = (l: string) => { setLang(l); localStorage.setItem("themis_lang", l); };
   const t = (en: string, zh: string) => lang === "zh" ? zh : en;
   const [accData, setAccData] = useState<AccData | null>(null);
