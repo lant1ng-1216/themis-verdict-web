@@ -1,7 +1,24 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, Component } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
+
+// ── Error Boundary ─────────────────────────────────────────────────────────────
+class CollabErrorBoundary extends Component<{children:React.ReactNode},{error:string|null}> {
+  constructor(props:any){ super(props); this.state={error:null}; }
+  static getDerivedStateFromError(e:Error){ return {error:e?.message||String(e)}; }
+  componentDidCatch(e:Error,info:any){ console.error("[CollabCrash]",e,info?.componentStack); }
+  render(){
+    if(this.state.error) return (
+      <div style={{position:"fixed",inset:0,background:"#030912",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,zIndex:9999,padding:32}}>
+        <div style={{fontFamily:"JetBrains Mono,monospace",fontSize:11,color:"#f87171",letterSpacing:"0.08em"}}>RENDER ERROR — 请截图发给开发者</div>
+        <div style={{fontFamily:"JetBrains Mono,monospace",fontSize:10,color:"rgba(255,255,255,0.5)",maxWidth:600,textAlign:"center",lineHeight:1.8,wordBreak:"break-all"}}>{this.state.error}</div>
+        <button onClick={()=>this.setState({error:null})} style={{fontFamily:"JetBrains Mono,monospace",fontSize:10,color:"#fff",background:"#0047cc",border:"none",borderRadius:8,padding:"8px 24px",cursor:"pointer"}}>重试</button>
+      </div>
+    );
+    return this.props.children;
+  }
+}
 
 const M = "JetBrains Mono, monospace";
 const AGENT_API = process.env.NEXT_PUBLIC_AGENT_API || "https://api.themisverdict.xyz";
@@ -31,7 +48,7 @@ const LAT_STEP = Math.PI / (LAT_LINES + 1);
 const LON_STEP = (2 * Math.PI) / LON_LINES;
 const PAIRS = ["BTC", "ETH", "BNB", "SOL", "DOGE", "XRP"];
 
-function shortId(id: string) { return id.replace(/^user_/, "").slice(0, 6).toUpperCase(); }
+function shortId(id: string) { return (id||"??").replace(/^user_/, "").slice(0, 6).toUpperCase(); }
 function strategyColor(bias?: string) {
   if (bias === "technical") return "#3b82f6";
   if (bias === "onchain")   return "#a78bfa";
@@ -529,6 +546,7 @@ export default function CollabPage() {
   const consensus = collabDone && myText.length > 20 && theirText.length > 20;
 
   return (
+    <CollabErrorBoundary>
     <div style={{width:"100vw",height:"100vh",overflow:"hidden",background:"#030912",display:"flex",flexDirection:"column",position:"relative"}}>
 
       {/* Top bar */}
@@ -598,6 +616,7 @@ export default function CollabPage() {
           priceAlerts={priceAlerts} onDismissAlert={(i)=>setPriceAlerts(a=>a.filter((_,idx)=>idx!==i))}/>
       )}
     </div>
+    </CollabErrorBoundary>
   );
 }
 
