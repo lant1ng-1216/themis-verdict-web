@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Web3Providers } from "./web3-providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,7 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <meta httpEquiv="Content-Language" content="en,zh" />
           <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
         </head>
-        <body>{children}</body>
+        <body>
+          <Web3Providers>{children}</Web3Providers>
+        </body>
       </html>
     </ClerkProvider>
   );

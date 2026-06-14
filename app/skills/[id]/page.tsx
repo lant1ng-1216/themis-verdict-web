@@ -4,6 +4,8 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { SiteNav } from "../../page";
 import { useUser } from "@clerk/nextjs";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useCommerceJob } from "../../lib/useCommerceJob";
 
 const M = "JetBrains Mono, monospace";
 const API = process.env.NEXT_PUBLIC_AGENT_API || "https://api.themisverdict.xyz";
@@ -49,11 +51,20 @@ export default function SkillDetailPage() {
   // Deploy
   const [deployMsg, setDeployMsg] = useState("");
 
-  // ERC-8183 paid call
-  const [paidRunning, setPaidRunning] = useState(false);
-  const [paidResult,  setPaidResult]  = useState<any>(null);
+  // ERC-8183 paid call (user wallet flow)
+  const commerce = useCommerceJob();
   const [paidSymbol,  setPaidSymbol]  = useState("BTC");
   const [paidQuestion,setPaidQuestion]= useState("");
+  const paidRunning = ["switching_chain","preparing","approving","creating_job","funding","executing"].includes(commerce.step);
+  const paidResult  = commerce.step === "done" ? commerce.result : null;
+  const stepLabel: Record<string, [string, string]> = {
+    switching_chain: ["切换网络…","Switching chain…"],
+    preparing: ["准备…","Preparing…"],
+    approving: ["批准 U token…","Approving…"],
+    creating_job: ["创建 Job…","Creating job…"],
+    funding: ["锁仓资金…","Escrowing…"],
+    executing: ["生成分析…","Generating…"],
+  };
 
   useEffect(() => {
     const s = localStorage.getItem("themis_lang");
@@ -123,20 +134,10 @@ export default function SkillDetailPage() {
 
   async function runPaidCall() {
     if (!user?.id) return;
-    setPaidRunning(true); setPaidResult(null);
-    try {
-      const res = await fetch(`${API}/api/commerce/skill/${skillId}/job`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user.id, symbol: paidSymbol, question: paidQuestion, lang }),
-      });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.detail || "Paid call failed");
-      setPaidResult(d);
-    } catch (e: any) {
-      setPaidResult({ error: e.message });
-    } finally {
-      setPaidRunning(false);
-    }
+    await commerce.run({
+      kind: "skill", skill_id: skillId, user_id: user.id,
+      symbol: paidSymbol, question: paidQuestion, lang,
+    });
   }
 
   async function deployToAgent() {
@@ -432,7 +433,7 @@ export default function SkillDetailPage() {
           {/* RIGHT: Info sidebar */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
-            {/* ERC-8183 paid call */}
+            {/* ERC-8183 paid call (user wallet flow) */}
             {skill?.monetized && skill?.price_bnb > 0 && (
               <div style={{ background: "linear-gradient(135deg,#fef9e7,#fef3c7)", borderRadius: 14, border: "1px solid #fcd34d", padding: "18px 20px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -442,6 +443,17 @@ export default function SkillDetailPage() {
                 <div style={{ fontSize: 11, color: "#92400e", fontFamily: M, marginBottom: 10, lineHeight: 1.6 }}>
                   {t(`链上付费一次性调用此 Skill · ${skill.price_bnb} BNB`, `Pay-per-call via on-chain commerce · ${skill.price_bnb} BNB`)}
                 </div>
+
+                {/* Wallet connect compact */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, padding: "6px 10px", background: "rgba(255,255,255,0.4)", borderRadius: 6 }}>
+                  <span style={{ fontFamily: M, fontSize: 9, color: "#78350f" }}>
+                    {commerce.isConnected
+                      ? `${commerce.address!.slice(0,6)}…${commerce.address!.slice(-4)}`
+                      : t("钱包未连接", "Wallet disconnected")}
+                  </span>
+                  <ConnectButton chainStatus="none" showBalance={false} accountStatus="address" />
+                </div>
+
                 <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
                   {["BTC","ETH","BNB","SOL"].map(s => (
                     <button key={s} onClick={() => setPaidSymbol(s)}
@@ -453,14 +465,15 @@ export default function SkillDetailPage() {
                 <input value={paidQuestion} onChange={e => setPaidQuestion(e.target.value)}
                   placeholder={t("可选问题（如：现在该建仓吗）", "Optional question")}
                   style={{ width: "100%", boxSizing: "border-box", fontFamily: M, fontSize: 11, padding: "8px 10px", borderRadius: 6, border: "1px solid #fcd34d", background: "rgba(255,255,255,0.65)", color: "#78350f", outline: "none", marginBottom: 8 }} />
-                <button onClick={runPaidCall} disabled={paidRunning || !user?.id}
-                  style={{ width: "100%", fontFamily: M, fontSize: 11, fontWeight: 800, color: "#fff", background: paidRunning ? "#94a3b8" : "#b45309", border: "none", borderRadius: 7, padding: "10px 0", cursor: paidRunning ? "wait" : "pointer", letterSpacing: "0.08em" }}>
-                  {paidRunning ? t("链上执行中…", "Running on-chain…") : t(`▶ 付费调用 (${skill.price_bnb} BNB)`, `▶ PAID CALL (${skill.price_bnb} BNB)`)}
+                <button onClick={runPaidCall} disabled={paidRunning || !user?.id || !commerce.isConnected}
+                  title={!commerce.isConnected ? t("请先连接钱包", "Connect wallet first") : ""}
+                  style={{ width: "100%", fontFamily: M, fontSize: 11, fontWeight: 800, color: "#fff", background: (paidRunning || !commerce.isConnected) ? "#94a3b8" : "#b45309", border: "none", borderRadius: 7, padding: "10px 0", cursor: (paidRunning || !commerce.isConnected) ? "not-allowed" : "pointer", letterSpacing: "0.08em" }}>
+                  {paidRunning ? t(stepLabel[commerce.step]?.[0] || "链上执行中…", stepLabel[commerce.step]?.[1] || "Running…") : t(`▶ 付费调用 (${skill.price_bnb} BNB)`, `▶ PAID CALL (${skill.price_bnb} BNB)`)}
                 </button>
-                {paidResult?.error && (
-                  <div style={{ marginTop: 8, fontSize: 10, color: "#dc2626", fontFamily: M }}>✗ {paidResult.error}</div>
+                {commerce.error && (
+                  <div style={{ marginTop: 8, fontSize: 10, color: "#dc2626", fontFamily: M, wordBreak: "break-word" as const }}>✗ {commerce.error}</div>
                 )}
-                {paidResult && !paidResult.error && (
+                {paidResult && (
                   <div style={{ marginTop: 10, padding: "10px 12px", background: "rgba(255,255,255,0.7)", borderRadius: 8, border: "1px solid rgba(180,83,9,0.2)" }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: "#78350f", fontFamily: M, marginBottom: 6, letterSpacing: "0.08em" }}>
                       ✓ JOB #{paidResult.job_id}
@@ -469,15 +482,10 @@ export default function SkillDetailPage() {
                       {paidResult.analysis}
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      {paidResult.chain?.tx_create_url && (
-                        <a href={paidResult.chain.tx_create_url} target="_blank" rel="noreferrer" style={{ fontSize: 9, color: "#b45309", textDecoration: "none", fontFamily: M }}>↗ Create TX</a>
-                      )}
-                      {paidResult.chain?.tx_fund_url && (
-                        <a href={paidResult.chain.tx_fund_url} target="_blank" rel="noreferrer" style={{ fontSize: 9, color: "#b45309", textDecoration: "none", fontFamily: M }}>↗ Fund TX</a>
-                      )}
-                      {paidResult.submit?.tx_submit_url && (
-                        <a href={paidResult.submit.tx_submit_url} target="_blank" rel="noreferrer" style={{ fontSize: 9, color: "#b45309", textDecoration: "none", fontFamily: M }}>↗ Submit TX</a>
-                      )}
+                      {paidResult.tx_approve && <a href={`https://testnet.bscscan.com/tx/${paidResult.tx_approve}`} target="_blank" rel="noreferrer" style={{ fontSize: 9, color: "#b45309", textDecoration: "none", fontFamily: M }}>↗ Approve TX</a>}
+                      {paidResult.tx_create  && <a href={`https://testnet.bscscan.com/tx/${paidResult.tx_create}`}  target="_blank" rel="noreferrer" style={{ fontSize: 9, color: "#b45309", textDecoration: "none", fontFamily: M }}>↗ Create TX</a>}
+                      {paidResult.tx_fund    && <a href={`https://testnet.bscscan.com/tx/${paidResult.tx_fund}`}    target="_blank" rel="noreferrer" style={{ fontSize: 9, color: "#b45309", textDecoration: "none", fontFamily: M }}>↗ Fund TX</a>}
+                      {paidResult.tx_submit_url && <a href={paidResult.tx_submit_url} target="_blank" rel="noreferrer" style={{ fontSize: 9, color: "#b45309", textDecoration: "none", fontFamily: M }}>↗ Submit TX</a>}
                     </div>
                   </div>
                 )}
