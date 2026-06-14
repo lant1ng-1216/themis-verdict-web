@@ -2545,7 +2545,7 @@ export default function AgentPage() {
     navLabel: { fontSize: 9, fontWeight: 700, color: "#b0b8cc", letterSpacing: "0.14em", padding: "0 8px", marginBottom: 5, display: "block" },
     sbFooter: { padding: "14px 18px", borderTop: "1px solid #e8ecf4" },
     autoBtn: { width: "100%", padding: 9, borderRadius: 8, background: "none", border: "1px solid #ffcdd2", color: "#d63b3b", fontSize: 10, fontFamily: "JetBrains Mono, monospace", cursor: "pointer", letterSpacing: "0.06em", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontWeight: 700 },
-    main: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
+    main: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" as const },
     topbar: { height: 52, borderBottom: "1px solid #e8ecf4", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px", flexShrink: 0 },
     messages: { flex: 1, overflowY: "auto" as const, padding: "28px 0 12px", background: "#ffffff", backgroundImage: "radial-gradient(circle, #e8ecf4 1px, transparent 1px)", backgroundSize: "24px 24px" },
     msgInner: { padding: "0 28px", display: "flex", flexDirection: "column", gap: 20 },
@@ -2703,7 +2703,7 @@ export default function AgentPage() {
 
         {/* 非对话页面面板 */}
         {activeNav !== "chat" && (
-          <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+          <div style={{ position: "absolute", inset: 0, top: 52, overflowY: "auto", background: "#fff" }}>
             {activeNav === "positions" && <PositionsPanel lang={lang} onCloseNav={(sym, tradeId) => {
               setInput(lang === "zh" ? `平仓 ${sym}，trade_id: ${tradeId}` : `Close position ${sym}, trade_id: ${tradeId}`);
               setActiveNav("chat");

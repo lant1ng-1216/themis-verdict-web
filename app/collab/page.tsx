@@ -140,13 +140,8 @@ export default function CollabPage() {
   // Place nodes on grid intersections
   useEffect(() => {
     fetch(`${AGENT_API}/api/collab/pool?limit=100`)
-      .then(r=>r.json()).then(d=>{
-        const realNodes = (d.nodes||[]).map((n: CollabNode)=>({...n, isReal:true}));
-        // Real nodes first (highlighted), demo nodes fill the rest
-        const demoFill = DEMO_NODES.filter(dn => !realNodes.find((rn: CollabNode)=>rn.user_id===dn.user_id));
-        place([...realNodes, ...demoFill]);
-      })
-      .catch(()=>place(DEMO_NODES));
+      .then(r=>r.json()).then(d=>place((d.nodes||[]).map((n: CollabNode)=>({...n, isReal:true}))))
+      .catch(()=>place([]));
   }, []);
 
   function hashId(id: string): number {
