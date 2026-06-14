@@ -33,6 +33,7 @@ interface CollabNode {
   risk_preference?: string;
   avatar_url?: string;
   stats?: { requests_total: number; requests_today: number; accuracy_rate?: number };
+  onchain_identity?: { agent_id: number; tx_hash: string; tx_url: string; network: string };
 }
 interface GridNode extends CollabNode {
   phi: number;
@@ -655,6 +656,15 @@ function NodePopup({node,pos,lang,onClose,onCollab}:{node:GridNode;pos:{x:number
           </div>
         ))}
       </div>
+      {node.onchain_identity&&(
+        <a href={node.onchain_identity.tx_url} target="_blank" rel="noreferrer"
+          style={{display:"flex",alignItems:"center",gap:8,marginBottom:12,padding:"7px 10px",background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:7,textDecoration:"none"}}>
+          <div style={{width:6,height:6,borderRadius:"50%",background:"#f59e0b",boxShadow:"0 0 6px #f59e0b"}}/>
+          <span style={{fontFamily:M,fontSize:8,fontWeight:700,color:"#fbbf24",letterSpacing:"0.1em"}}>ERC-8004</span>
+          <span style={{fontFamily:M,fontSize:8,color:"rgba(251,191,36,0.7)"}}>#{node.onchain_identity.agent_id}</span>
+          <span style={{marginLeft:"auto",fontFamily:M,fontSize:8,color:"rgba(251,191,36,0.5)"}}>↗</span>
+        </a>
+      )}
       {(node.skills||[]).length>0&&(
         <div style={{marginBottom:14}}>
           <div style={{fontFamily:M,fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:"0.12em",marginBottom:5}}>SKILLS</div>

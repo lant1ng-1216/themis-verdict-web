@@ -2047,6 +2047,31 @@ function CollabPanel({ lang, userId }: { lang: string; userId: string }) {
           </button>
         </div>
 
+        {/* 链上身份徽章 (ERC-8004) */}
+        {isEnabled && node?.onchain_identity && (
+          <div style={{ marginTop: 16, padding: "12px 14px", background: "linear-gradient(90deg,#fef3c7,#fef9e7)", border: "1px solid #fcd34d", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 7, background: "#f59e0b", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/>
+                </svg>
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: M, fontSize: 10, fontWeight: 800, color: "#78350f", letterSpacing: "0.06em" }}>
+                  {t("ERC-8004 链上身份已注册", "ERC-8004 ON-CHAIN IDENTITY")}
+                </div>
+                <div style={{ fontFamily: M, fontSize: 9, color: "#92400e", marginTop: 2, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>
+                  Agent #{node.onchain_identity.agent_id} · {node.onchain_identity.network}
+                </div>
+              </div>
+            </div>
+            <a href={node.onchain_identity.tx_url} target="_blank" rel="noreferrer"
+              style={{ fontFamily: M, fontSize: 9, fontWeight: 700, color: "#fff", background: "#b45309", padding: "6px 12px", borderRadius: 6, textDecoration: "none", letterSpacing: "0.08em", flexShrink: 0 }}>
+              {t("查看交易 ↗", "VIEW TX ↗")}
+            </a>
+          </div>
+        )}
+
         {/* 今日统计 */}
         {isEnabled && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginTop: 20 }}>
