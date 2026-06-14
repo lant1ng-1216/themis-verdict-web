@@ -6,7 +6,7 @@ import Link from "next/link";
 const API_BASE = process.env.NEXT_PUBLIC_AGENT_API || "https://api.themisverdict.xyz";
 
 // ── Types ────────────────────────────────────────────────────────────────────
-type NavItem = "overview" | "apikeys" | "usage" | "billing";
+type NavItem = "overview" | "apikeys" | "usage" | "billing" | "commission";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const PLANS = {
@@ -65,14 +65,16 @@ function Sidebar({ active, setActive, lang, plan, consoleTab, isDeveloper, devNa
     if (name === "dev-analytics") return <svg {...props}><polyline points="2,12 5,7 8,10 11,5 14,8"/></svg>;
     if (name === "dev-revenue")   return <svg {...props}><rect x="2" y="4" width="12" height="8" rx="1.5"/><line x1="2" y1="7" x2="14" y2="7"/><line x1="5" y1="10.5" x2="7" y2="10.5"/></svg>;
     if (name === "dev-settings")  return <svg {...props}><circle cx="8" cy="8" r="2.5"/><path d="M8 2v1.5M8 12.5V14M2 8h1.5M12.5 8H14M3.5 3.5l1 1M11.5 11.5l1 1M11.5 3.5l-1 1M3.5 11.5l1-1"/></svg>;
+    if (name === "commission") return <svg {...props}><path d="M8 2l1.8 4.5L14 7l-3 3 1 4.5L8 12l-4 2.5 1-4.5-3-3 4.2-.5L8 2z"/></svg>;
     return null;
   };
 
   const navItems: { key: NavItem; iconName: string; en: string; zh: string }[] = [
-    { key: "overview", iconName: "overview", en: "Overview",  zh: "概览" },
-    { key: "apikeys",  iconName: "apikeys",  en: "API Keys",  zh: "API 密钥" },
-    { key: "usage",    iconName: "usage",    en: "Usage",     zh: "用量统计" },
-    { key: "billing",  iconName: "billing",  en: "Billing",   zh: "套餐账单" },
+    { key: "overview",  iconName: "overview",   en: "Overview",   zh: "概览" },
+    { key: "apikeys",   iconName: "apikeys",    en: "API Keys",   zh: "API 密钥" },
+    { key: "usage",     iconName: "usage",      en: "Usage",      zh: "用量统计" },
+    { key: "billing",   iconName: "billing",    en: "Billing",    zh: "套餐账单" },
+    { key: "commission",iconName: "commission", en: "Commission", zh: "委托分析" },
   ];
 
   return (
@@ -1843,10 +1845,165 @@ export default function DashboardPage() {
               {activeNav === "apikeys"  && <ApiKeysPanel lang={lang} plan={plan} />}
               {activeNav === "usage"    && <UsagePanel plan={plan} lang={lang} userId={userId} />}
               {activeNav === "billing"  && <BillingPanel plan={plan} lang={lang} userId={userId} onPlanChange={(p) => setPlan(p as keyof typeof PLANS)} />}
+              {activeNav === "commission" && <CommissionPanel lang={lang} userId={userId} />}
             </>
           )}
         </div>
       </main>
+    </div>
+  );
+}
+
+// ── Commission Panel (ERC-8183 verdict委托) ─────────────────────────────────
+function CommissionPanel({ lang, userId }: { lang: string; userId: string }) {
+  const t = (zh: string, en: string) => lang === "zh" ? zh : en;
+  const M = "JetBrains Mono, monospace";
+  const API = process.env.NEXT_PUBLIC_AGENT_API || "https://api.themisverdict.xyz";
+  const [symbol, setSymbol]   = useState("BTC");
+  const [budget, setBudget]   = useState("0.005");
+  const [question, setQuestion] = useState("");
+  const [running, setRunning] = useState(false);
+  const [result, setResult]   = useState<any>(null);
+  const [jobs, setJobs]       = useState<any[]>([]);
+  const [loadingJobs, setLoadingJobs] = useState(false);
+
+  const loadJobs = () => {
+    if (!userId) return;
+    setLoadingJobs(true);
+    fetch(`${API}/api/commerce/jobs/by-user?user_id=${userId}`)
+      .then(r => r.json())
+      .then(d => setJobs(d.jobs || []))
+      .catch(() => {})
+      .finally(() => setLoadingJobs(false));
+  };
+
+  useEffect(() => { loadJobs(); /* eslint-disable-next-line */ }, [userId]);
+
+  async function commission() {
+    if (!userId) return;
+    setRunning(true); setResult(null);
+    try {
+      const res = await fetch(`${API}/api/commerce/verdict/commission`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, symbol, budget_bnb: parseFloat(budget) || 0.005, question, lang }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.detail || "Failed");
+      setResult(d);
+      loadJobs();
+    } catch (e: any) {
+      setResult({ error: e.message });
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  async function settle(jobId: number) {
+    await fetch(`${API}/api/commerce/job/${jobId}/settle`, { method: "POST" });
+    loadJobs();
+  }
+
+  return (
+    <div style={{ padding: 32, maxWidth: 920 }}>
+      <h1 style={{ fontFamily: M, fontSize: 22, fontWeight: 800, color: "#0a1a3a", margin: 0, marginBottom: 6 }}>
+        {t("链上委托分析", "On-chain Commission")}
+      </h1>
+      <p style={{ fontFamily: M, fontSize: 12, color: "#64748b", marginTop: 0, marginBottom: 26, lineHeight: 1.7 }}>
+        {t("通过 ERC-8183 商务协议向 Themis Agent 委托一份链上可验证的市场分析。资金锁仓 72 小时争议窗口，到期自动结算。",
+          "Commission an on-chain verifiable verdict via ERC-8183. Funds escrow for a 72h dispute window then auto-settle.")}
+      </p>
+
+      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", padding: 28, marginBottom: 24, boxShadow: "0 1px 4px rgba(0,20,80,0.04)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 16 }}>
+          <div>
+            <div style={{ fontFamily: M, fontSize: 9, fontWeight: 700, color: "#0047cc", letterSpacing: "0.14em", marginBottom: 6 }}>{t("交易对", "SYMBOL")}</div>
+            <select value={symbol} onChange={e => setSymbol(e.target.value)}
+              style={{ width: "100%", fontFamily: M, fontSize: 12, padding: "9px 12px", borderRadius: 7, border: "1px solid #e2e8f0", background: "#f8fafc", color: "#0a1a3a", outline: "none" }}>
+              {["BTC","ETH","BNB","SOL","DOGE","XRP"].map(s => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <div style={{ fontFamily: M, fontSize: 9, fontWeight: 700, color: "#0047cc", letterSpacing: "0.14em", marginBottom: 6 }}>{t("预算 (BNB)", "BUDGET (BNB)")}</div>
+            <input value={budget} onChange={e => setBudget(e.target.value)} type="number" step="0.001" min="0.001"
+              style={{ width: "100%", boxSizing: "border-box", fontFamily: M, fontSize: 12, padding: "9px 12px", borderRadius: 7, border: "1px solid #e2e8f0", background: "#f8fafc", color: "#0a1a3a", outline: "none" }} />
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-end" }}>
+            <button onClick={commission} disabled={running || !userId}
+              style={{ width: "100%", fontFamily: M, fontSize: 11, fontWeight: 800, color: "#fff", background: running ? "#94a3b8" : "#0047cc", border: "none", borderRadius: 8, padding: "11px 0", cursor: running ? "wait" : "pointer", letterSpacing: "0.08em" }}>
+              {running ? t("生成中…", "Running…") : t("▶ 委托分析", "▶ COMMISSION")}
+            </button>
+          </div>
+        </div>
+        <div>
+          <div style={{ fontFamily: M, fontSize: 9, fontWeight: 700, color: "#0047cc", letterSpacing: "0.14em", marginBottom: 6 }}>{t("具体问题（可选）", "QUESTION (OPTIONAL)")}</div>
+          <input value={question} onChange={e => setQuestion(e.target.value)}
+            placeholder={t("例：未来 48 小时是否适合建仓 BTC？", "e.g. Good time to enter BTC in 48h?")}
+            style={{ width: "100%", boxSizing: "border-box", fontFamily: M, fontSize: 12, padding: "9px 12px", borderRadius: 7, border: "1px solid #e2e8f0", background: "#f8fafc", color: "#0a1a3a", outline: "none" }} />
+        </div>
+      </div>
+
+      {result?.error && <div style={{ fontFamily: M, fontSize: 12, color: "#dc2626", marginBottom: 16 }}>✗ {result.error}</div>}
+
+      {result && !result.error && (
+        <div style={{ background: "linear-gradient(135deg,#ecfeff,#f0fdf4)", borderRadius: 12, border: "1px solid #6ee7b7", padding: 22, marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981" }} />
+            <span style={{ fontFamily: M, fontSize: 10, fontWeight: 800, color: "#064e3b", letterSpacing: "0.12em" }}>
+              {t("委托完成 · JOB #", "COMMISSIONED · JOB #")}{result.job_id}
+            </span>
+          </div>
+          <pre style={{ fontFamily: M, fontSize: 11, color: "#0a1a3a", margin: 0, whiteSpace: "pre-wrap" as const, maxHeight: 280, overflowY: "auto" as const }}>
+            {result.verdict?.rationale || result.verdict?.conclusion || JSON.stringify(result.verdict, null, 2)}
+          </pre>
+          <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" as const }}>
+            {result.chain?.tx_create_url && <a href={result.chain.tx_create_url} target="_blank" rel="noreferrer" style={{ fontFamily: M, fontSize: 10, color: "#059669", textDecoration: "none" }}>↗ Create TX</a>}
+            {result.chain?.tx_fund_url && <a href={result.chain.tx_fund_url} target="_blank" rel="noreferrer" style={{ fontFamily: M, fontSize: 10, color: "#059669", textDecoration: "none" }}>↗ Fund TX</a>}
+            {result.submit?.tx_submit_url && <a href={result.submit.tx_submit_url} target="_blank" rel="noreferrer" style={{ fontFamily: M, fontSize: 10, color: "#059669", textDecoration: "none" }}>↗ Submit TX</a>}
+          </div>
+        </div>
+      )}
+
+      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", padding: 22, boxShadow: "0 1px 4px rgba(0,20,80,0.04)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ fontFamily: M, fontSize: 11, fontWeight: 800, color: "#0a1a3a", letterSpacing: "0.1em" }}>
+            {t("我的委托历史", "MY COMMISSIONS")} · {jobs.length}
+          </div>
+          <button onClick={loadJobs} disabled={loadingJobs}
+            style={{ fontFamily: M, fontSize: 9, color: "#0047cc", background: "transparent", border: "1px solid #0047cc", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
+            {loadingJobs ? "…" : t("刷新", "Refresh")}
+          </button>
+        </div>
+        {jobs.length === 0 ? (
+          <div style={{ fontFamily: M, fontSize: 11, color: "#94a3b8", padding: "16px 0" }}>
+            {t("暂无委托记录", "No commissions yet")}
+          </div>
+        ) : jobs.map(j => (
+          <div key={j.job_id} style={{ display: "flex", alignItems: "center", padding: "10px 0", borderTop: "1px solid #f1f5f9" }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: M, fontSize: 11, fontWeight: 700, color: "#0a1a3a" }}>
+                #{j.job_id} · {j.kind === "verdict" ? (j.symbol || "—") : (j.skill_name || j.skill_id)}
+              </div>
+              <div style={{ fontFamily: M, fontSize: 9, color: "#94a3b8", marginTop: 2 }}>
+                {j.budget_bnb || j.price_bnb} BNB · {j.status} · {new Date(j.created_at).toLocaleString()}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {j.submit?.tx_submit_url && (
+                <a href={j.submit.tx_submit_url} target="_blank" rel="noreferrer"
+                  style={{ fontFamily: M, fontSize: 9, color: "#0047cc", textDecoration: "none", padding: "4px 10px", border: "1px solid #0047cc", borderRadius: 6 }}>
+                  ↗ TX
+                </a>
+              )}
+              {j.status === "submitted" && (
+                <button onClick={() => settle(j.job_id)}
+                  style={{ fontFamily: M, fontSize: 9, color: "#fff", background: "#059669", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
+                  {t("结算", "Settle")}
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

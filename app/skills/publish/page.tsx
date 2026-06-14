@@ -19,6 +19,8 @@ export default function PublishSkillPage() {
     name: "", description: "", description_en: "", version: "v1",
     tags: "", supported_pairs: "BTC,ETH,BNB",
     price_usdt: "0",
+    price_bnb: "0",
+    developer_wallet: "",
     developer_name: "",
     prompt_template: "", example_input: "", example_output: "",
     visibility: "public",
@@ -65,6 +67,8 @@ export default function PublishSkillPage() {
           tags: form.tags.split(",").map(s => s.trim()).filter(Boolean),
           supported_pairs: form.supported_pairs.split(",").map(s => s.trim()).filter(Boolean),
           price_usdt: parseFloat(form.price_usdt) || 0,
+          price_bnb: parseFloat(form.price_bnb) || 0,
+          developer_wallet: form.developer_wallet || "",
           developer_name: form.developer_name || user.fullName || "",
           prompt_template: form.prompt_template,
           example_input: form.example_input,
@@ -196,6 +200,17 @@ export default function PublishSkillPage() {
             <div>
               <label style={labelStyle}>{t("PRICE (USDT/CALL)", "单次调用价格（USDT）")}</label>
               <input style={inputStyle} type="number" min="0" step="0.01" value={form.price_usdt} onChange={e => set("price_usdt", e.target.value)} placeholder="0" />
+            </div>
+            <div>
+              <label style={labelStyle}>{t("ERC-8183 PRICE (BNB)", "链上付费价格（BNB）")}</label>
+              <input style={inputStyle} type="number" min="0" step="0.0001" value={form.price_bnb} onChange={e => set("price_bnb", e.target.value)} placeholder="0.001" />
+              <div style={{ fontFamily: M, fontSize: 8, color: "#94a3b8", marginTop: 4, letterSpacing: "0.03em" }}>
+                {t("> 0 enables paid on-chain calls via ERC-8183 commerce", "大于 0 时开启 ERC-8183 链上付费调用")}
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>{t("PAYOUT WALLET (BNB CHAIN)", "收款钱包地址（BNB Chain）")}</label>
+              <input style={inputStyle} value={form.developer_wallet} onChange={e => set("developer_wallet", e.target.value)} placeholder="0x..." />
             </div>
             <div>
               <label style={labelStyle}>{t("DISPLAY NAME", "开发者显示名称")}</label>
