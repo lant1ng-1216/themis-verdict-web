@@ -475,35 +475,40 @@ export default function CollabPage() {
 
     // Parallel SSE streams
     async function streamFrom(endpoint: string, setter: React.Dispatch<React.SetStateAction<string>>, tokenSetter?: React.Dispatch<React.SetStateAction<number>>) {
-      const res = await fetch(`${AGENT_API}/api/collab/${endpoint}`, {
-        method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body),
-      });
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      let buf = "";
-      while(true){
-        const {done, value} = await reader.read();
-        if(done) break;
-        buf += decoder.decode(value, {stream:true});
-        const parts = buf.split("\n\n");
-        buf = parts.pop()!;
-        for(const part of parts){
-          if(!part.startsWith("data:")) continue;
-          const raw = part.slice(5).trim();
-          if(raw==="[DONE]") break;
-          try{
-            const ev = JSON.parse(raw);
-            if(ev.type==="chunk") setter(p => p + stripMd(ev.text));
-            if(ev.type==="done" && tokenSetter && ev.tokens) tokenSetter(ev.tokens);
-          } catch{}
+      try {
+        const res = await fetch(`${AGENT_API}/api/collab/${endpoint}`, {
+          method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body),
+        });
+        if (!res.ok || !res.body) { setter(p => p + (res.status === 429 ? "[quota exceeded]" : "[analysis failed]")); return; }
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = "";
+        while(true){
+          const {done, value} = await reader.read();
+          if(done) break;
+          buf += decoder.decode(value, {stream:true});
+          const parts = buf.split("\n\n");
+          buf = parts.pop()!;
+          for(const part of parts){
+            if(!part.startsWith("data:")) continue;
+            const raw = part.slice(5).trim();
+            if(raw==="[DONE]") break;
+            try{
+              const ev = JSON.parse(raw);
+              if(ev.type==="chunk") setter(p => p + stripMd(ev.text));
+              if(ev.type==="done" && tokenSetter && ev.tokens) tokenSetter(ev.tokens);
+            } catch{}
+          }
         }
+      } catch(e) {
+        setter(p => p || "[connection error]");
       }
     }
 
     Promise.all([
       streamFrom("analyze", setMyText, setMyTokens).then(()=>{ myDone=true; if(theirDone) onBothDone(); }),
       streamFrom("analyze/peer", setTheirText).then(()=>{ theirDone=true; if(myDone) onBothDone(); }),
-    ]);
+    ]).catch(()=>{ setCollabDone(true); });
 
     function onBothDone() {
       setCollabDone(true);
