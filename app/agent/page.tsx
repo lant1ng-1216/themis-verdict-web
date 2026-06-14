@@ -1963,6 +1963,23 @@ function CollabPanel({ lang, userId }: { lang: string; userId: string }) {
     }).catch(() => setLoading(false));
   }, [userId]);
 
+  // Poll node status while ERC-8004 registration is pending
+  useEffect(() => {
+    if (!userId) return;
+    const id = node?.onchain_identity;
+    if (!id?.pending) return;
+    const timer = setInterval(() => {
+      fetch(`${AGENT_API}/api/collab/node/status?user_id=${userId}`)
+        .then(r => r.json())
+        .then(d => {
+          setNode(d);
+          if (d?.onchain_identity && !d.onchain_identity.pending) clearInterval(timer);
+        })
+        .catch(() => {});
+    }, 15000);
+    return () => clearInterval(timer);
+  }, [userId, node?.onchain_identity?.pending]);
+
   async function toggleNode(enable: boolean) {
     setSaving(true); setMsg("");
     try {
@@ -2058,17 +2075,25 @@ function CollabPanel({ lang, userId }: { lang: string; userId: string }) {
               </div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontFamily: M, fontSize: 10, fontWeight: 800, color: "#78350f", letterSpacing: "0.06em" }}>
-                  {t("ERC-8004 链上身份已注册", "ERC-8004 ON-CHAIN IDENTITY")}
+                  {node.onchain_identity.pending
+                    ? t("ERC-8004 链上注册中…", "ERC-8004 REGISTERING…")
+                    : t("ERC-8004 链上身份已注册", "ERC-8004 ON-CHAIN IDENTITY")}
                 </div>
                 <div style={{ fontFamily: M, fontSize: 9, color: "#92400e", marginTop: 2, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>
-                  Agent #{node.onchain_identity.agent_id} · {node.onchain_identity.network}
+                  {node.onchain_identity.pending
+                    ? t("BNB Chain 链上注册需要 30-90 秒，稍后刷新查看 Agent ID", "BSC registration takes 30-90s — refresh to see Agent ID")
+                    : `Agent #${node.onchain_identity.agent_id} · ${node.onchain_identity.network}`}
                 </div>
               </div>
             </div>
-            <a href={node.onchain_identity.tx_url} target="_blank" rel="noreferrer"
-              style={{ fontFamily: M, fontSize: 9, fontWeight: 700, color: "#fff", background: "#b45309", padding: "6px 12px", borderRadius: 6, textDecoration: "none", letterSpacing: "0.08em", flexShrink: 0 }}>
-              {t("查看交易 ↗", "VIEW TX ↗")}
-            </a>
+            {node.onchain_identity.tx_url ? (
+              <a href={node.onchain_identity.tx_url} target="_blank" rel="noreferrer"
+                style={{ fontFamily: M, fontSize: 9, fontWeight: 700, color: "#fff", background: "#b45309", padding: "6px 12px", borderRadius: 6, textDecoration: "none", letterSpacing: "0.08em", flexShrink: 0 }}>
+                {t("查看交易 ↗", "VIEW TX ↗")}
+              </a>
+            ) : (
+              <div style={{ width: 12, height: 12, border: "2px solid #b45309", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite", flexShrink: 0 }} />
+            )}
           </div>
         )}
 
