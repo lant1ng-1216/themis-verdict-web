@@ -11,9 +11,8 @@ class CollabErrorBoundary extends Component<{children:React.ReactNode},{error:st
   render(){
     if(this.state.error) return (
       <div style={{position:"fixed",inset:0,background:"#030912",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,zIndex:9999,padding:32}}>
-        <div style={{fontFamily:"JetBrains Mono,monospace",fontSize:11,color:"#f87171",letterSpacing:"0.08em"}}>RENDER ERROR — 请截图发给开发者</div>
-        <div style={{fontFamily:"JetBrains Mono,monospace",fontSize:10,color:"rgba(255,255,255,0.5)",maxWidth:600,textAlign:"center",lineHeight:1.8,wordBreak:"break-all"}}>{this.state.error}</div>
-        <button onClick={()=>this.setState({error:null})} style={{fontFamily:"JetBrains Mono,monospace",fontSize:10,color:"#fff",background:"#0047cc",border:"none",borderRadius:8,padding:"8px 24px",cursor:"pointer"}}>重试</button>
+        <div style={{fontFamily:"JetBrains Mono,monospace",fontSize:11,color:"#f87171",letterSpacing:"0.08em"}}>协作网络暂时不可用</div>
+        <button onClick={()=>{ this.setState({error:null}); window.location.reload(); }} style={{fontFamily:"JetBrains Mono,monospace",fontSize:10,color:"#fff",background:"#0047cc",border:"none",borderRadius:8,padding:"8px 24px",cursor:"pointer"}}>刷新重试</button>
       </div>
     );
     return this.props.children;
